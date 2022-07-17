@@ -12,5 +12,5 @@ const route = require("./src/routes");
 
 route(app);
 app.listen(3000, () => {
-  console.log(`Example app listening on port http://localhost:3000/`);
+  console.log(`http://localhost:3000/`);
 });
