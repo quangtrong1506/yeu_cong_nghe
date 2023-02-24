@@ -1,6 +1,42 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router();
 
-const apiController = require("../app/controllers/apiController");
-router.use("/api/happy-birthday", apiController.index);
+const siteController = require('../app/controllers/siteController');
+const apiController = require('../app/controllers/apiController');
+
+//? danh sách trạng thái
+router.use('/api/get-list-item-status', apiController.getListItemStatus);
+router.use('/api/add-item-status', apiController.addItemStatus);
+
+//? danh sách danh mục
+router.use('/api/get-list-categories', apiController.getListCategories);
+router.use('/api/add-categories', apiController.addCategories);
+router.use('/api/edit-categories', apiController.editCategories);
+router.use('/api/remove-categories', apiController.removeCategories);
+
+//? danh sách nhà cung cấp
+router.use('/api/get-list-supplier', apiController.getListSupplier);
+router.use('/api/add-supplier', apiController.addSupplier);
+router.use('/api/edit-supplier', apiController.editSupplier);
+router.use('/api/remove-supplier', apiController.removeSupplier);
+
+router.use('/api/add-product', apiController.addProduct);
+router.use('/api/edit-product', apiController.editProduct);
+router.use('/api/remove-product', apiController.removeProduct);
+
+// giỏ hàng
+router.use('/api/add-to-cart', apiController.addToCart);
+router.use('/api/cart-info', apiController.cartInfo);
+router.use('/api/update-cart', apiController.updateCart);
+router.use('/api/remove-cart', apiController.removeCart);
+
+//
+router.use('/api/add-voucher', apiController.addVoucher);
+router.use('/api/check-voucher', apiController.checkVoucher);
+
+//? up ảnh tạm cho ck-editor // fileUploadTemp
+router.use('/api/upload-images-ck-editor', apiController.fileUploadTemp);
+// router.use('/api/add-product', apiController.addProduct);
+router.use('/api/:slug', siteController.error);
+
 module.exports = router;
