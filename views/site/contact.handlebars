@@ -27,7 +27,7 @@
                 <div class='contact__widget'>
                     <span class='icon_mail_alt'></span>
                     <h4>Email</h4>
-                    <p>nongsanxanhk14@gmail.com</p>
+                    <p>sp.yeucongnghe@gmail.com</p>
                 </div>
             </div>
         </div>
@@ -68,16 +68,16 @@
                 </div>
             </div>
         </div>
-        <form action='#'>
+        <form onsubmit="addMessage(event)">
             <div class='row'>
                 <div class='col-lg-6 col-md-6'>
-                    <input type='text' placeholder='Họ & Tên' />
+                    <input id="name" type='text' placeholder='Họ & Tên' />
                 </div>
                 <div class='col-lg-6 col-md-6'>
-                    <input type='text' placeholder='Email' />
+                    <input id="email" type='email' placeholder='Email' />
                 </div>
-                <div class='col-lg-12 text-center'>
-                    <textarea placeholder='Lời nhắn'></textarea>
+                <div  class='col-lg-12 text-center'>
+                    <textarea id="message" placeholder='Lời nhắn'></textarea>
                     <button type='submit' class='site-btn'>Gửi</button>
                 </div>
             </div>
@@ -85,3 +85,39 @@
     </div>
 </div>
 <!-- Contact Form End -->
+<script>
+    function addMessage(event){
+        event.preventDefault();
+        var name = document.getElementById("name");
+        var email = document.getElementById("email");
+        var message = document.getElementById("message");
+
+        var settings = {
+                "url": "/api/add-message",
+                "method": "POST",
+                "timeout": 0,
+                "headers": {
+                    "Content-Type": "application/json",
+                },
+                "data": JSON.stringify({
+                    "name": name.value,
+                    "email": email.value,
+                    "message": message.value
+                }),
+            };
+
+            $.ajax(settings).done(function (response) {
+                var icon = response.code == 401 ? "warning" : "success";
+                Swal.fire({
+                    title:response.message,
+                    icon:icon
+                })
+                if(response.code !=401) {
+                    name.value = "";
+                    email.value = "";
+                    message.value = "";
+                }
+            });
+    }
+
+</script>

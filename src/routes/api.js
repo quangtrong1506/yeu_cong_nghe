@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 
-const siteController = require('../app/controllers/siteController');
 const apiController = require('../app/controllers/apiController');
 
 //? danh sách trạng thái
@@ -30,9 +29,14 @@ router.use('/api/cart-info', apiController.cartInfo);
 router.use('/api/update-cart', apiController.updateCart);
 router.use('/api/remove-cart', apiController.removeCart);
 
-//
+// mã giảm giá
 router.use('/api/add-voucher', apiController.addVoucher);
 router.use('/api/check-voucher', apiController.checkVoucher);
+
+// Để lại lời nhắn
+router.use('/api/add-message', apiController.addMessage);
+// Đăng ký nhận ưu đãi
+router.use('/api/add-subscriber', apiController.addSubscriber);
 
 //? up ảnh tạm cho ck-editor // fileUploadTemp
 router.use('/api/upload-images-ck-editor', apiController.fileUploadTemp);

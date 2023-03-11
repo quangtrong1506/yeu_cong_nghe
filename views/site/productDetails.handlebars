@@ -30,8 +30,16 @@
              <span class="product__details__price__old">{{product.priceOld}}</span>
             {{/if}}
             <span>{{product.price}}</span>
-             {{#if product.sale}}
+            {{#if product.stop}}
+                  <span class="product__details__stop">Ngừng kinh doanh</span>
+            {{else}}
+            {{#if product.hetHang}}
+            <span class="product__details__price__present">Hết hàng</span>
+            {{else}}
+            {{#if product.sale}}
             <span class="product__details__price__present">Giảm {{product.presentSale}}%</span>
+             {{/if}}
+             {{/if}}
              {{/if}}
             </div>
           <div class="product__details__quantity">
@@ -45,11 +53,9 @@
           <ul>
             <li><b>Số lượng</b> <span>{{product.quantity}}</span></li>
             <li>
-              <b>Giao hàng</b>
-              <span>30 phút</span>
+              <b>Đã bán</b>
+              <span>{{product.sold}}</span>
             </li>
-            <li><b>Tổng trọng lượng</b>
-              <span>{{product.thuoc_tinh.khoi_luong}} kg</span></li>
             <li><b>Chia sẻ</b>
               <div class="share">
                 <span onclick="share('/san-pham/{{product.slug}}','Chia sẻ sản phẩm','{{product.name}}')">
@@ -98,23 +104,43 @@
       </div>
     </div>
     <div class="row">
-      {{#each prod2}}
-      <div class="col-lg-3 col-md-4 col-sm-6">
-        <div class="product__item">
-          <div
-            class="product__item__pic set-bg"
-            data-setbg="/images/product/{{this.images.[0]}}">
-            <ul class="product__item__pic__hover">
-              <li><a href="#"><i class="fa fa-retweet"></i></a></li>
-              <li><a href="#"><i class="fa fa-shopping-cart"></i></a></li>
-            </ul>
-          </div>
-          <div class="product__item__text">
-            <h6><a href="/san-pham/{{this.slug}}">{{this.name}}</a></h6>
-            <h5>{{this.price}}</h5>
-          </div>
+      {{#each productLike}}
+      <div class='col-lg-3 col-md-4 col-sm-6'>
+            <div class='featured__item'>
+                <div
+                    class='featured__item__pic set-bg'
+                    data-setbg='/images/product/{{this.images.[0]}}'>
+                    <ul class='featured__item__pic__hover'>
+                        <li>
+                            <a href='javascript:' onclick="share('/san-pham/{{this.slug}}')"><i class='fa fa-share-alt'></i></a>
+                        </li>
+                        <li>
+                            <a href='javascript:' onclick="addToCart('{{this.id}}',1)"><i class='fa fa-shopping-cart'></i></a>
+                        </li>
+                    </ul>
+                </div>
+                <div class='featured__item__text'>
+                    <h6>
+                        <a href='/san-pham/{{this.slug}}'>
+                            {{this.name}}
+                        </a>
+                    </h6>
+                    <h5>{{this.price}}</h5>
+                </div>
+
+                {{#if this.stop}}
+                <div class="sale" style="background-color: blueviolet;">Ngừng kinh doanh</div>
+                {{else}}
+                {{#if this.quantity}}
+                {{#if this.sale}}
+                <div class="sale">-{{this.present}}%</div>
+                {{/if}}
+                {{else}}
+                  <div class="sale">Hết hàng</div>
+                {{/if}}
+                {{/if}}
+            </div>
         </div>
-      </div>
       {{/each}}
     </div>
   </div>

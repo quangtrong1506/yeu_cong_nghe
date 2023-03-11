@@ -153,6 +153,7 @@ class HomeController {
             news: news,
         });
     }
+
     async product(req, res, next) {
         var categories = await Categories.find({});
         var limit = 16;
@@ -388,6 +389,7 @@ class HomeController {
             number: number,
         });
     }
+
     async newsDetails(req, res, next) {
         var slug = req.params.slug;
         var categories = await Categories.find({});
@@ -412,6 +414,7 @@ class HomeController {
             categories: mongooseToObject(categories),
         });
     }
+
     async productDetails(req, res, next) {
         var slug = req.params.slug;
         var prod = await Product.findOne({ slug: slug });
@@ -420,13 +423,13 @@ class HomeController {
                 layout: 'main',
                 session: req.session,
             });
-        var prod2 = await Product.find({ categories: prod.categories });
-        var tmp = [];
-        for (let i = 0; i < prod2.length; i++) {
-            if (prod.slug != prod2[i].slug) tmp.push(prod2[i]);
+        var productLikeDB = await Product.find({ categories: prod.categories });
+        if (!productLike) productLikeDB = mongooseToObject(productLikeDB);
+        var productLike = [];
+        for (let i = 0; i < productLikeDB.length; i++) {
+            if (prod.slug != productLikeDB[i].slug) productLike.push(productLikeDB[i]);
         }
         prod = singleMongooseObject(prod);
-        tmp = mongooseToObject(tmp);
         if (prod.priceSale > 0) {
             var priceTmp = prod.price;
             prod.price = priceTmp - prod.priceSale;
@@ -437,27 +440,31 @@ class HomeController {
             }).format(priceTmp);
             prod.sale = true;
         }
+        if (prod.quantity <= 0) prod.hetHang = true;
+        if (prod.status == 'Ngừng kinh doanh') prod.stop = true;
         prod.price = new Intl.NumberFormat('vi-VN', {
             style: 'currency',
             currency: 'VND',
         }).format(prod.price);
-        for (let i = 0; i < tmp.length; i++) {
-            tmp[i].price = new Intl.NumberFormat('vi-VN', {
+        for (let i = 0; i < productLike.length; i++) {
+            productLike[i].price = new Intl.NumberFormat('vi-VN', {
                 style: 'currency',
                 currency: 'VND',
-            }).format(tmp[i].price);
+            }).format(productLike[i].price);
+            if (productLike[i].status == 'Ngừng kinh doanh') productLike[i].stop = true;
         }
         var categories = await Categories.find({});
 
-        res.render('products/details', {
+        res.render('site/productDetails', {
             layout: 'main',
             title: prod.name,
             product: prod,
-            prod2: tmp,
+            productLike: productLike,
             session: req.session,
             categories: mongooseToObject(categories),
         });
     }
+
     async error(req, res, next) {
         var categories = await Categories.find({});
         res.render('site/error', {

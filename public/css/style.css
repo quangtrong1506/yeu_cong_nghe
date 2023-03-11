@@ -1857,6 +1857,15 @@ ol {
     margin-left: 5px;
     padding: 3px 5px;
 }
+.product__details__text .product__details__price .product__details__stop {
+    font-size: 16px;
+    color: #fff;
+    font-weight: 300;
+    background-color: #7b12b0;
+    border-radius: 3px;
+    margin-left: 5px;
+    padding: 3px 5px;
+}
 
 .product__details__text p {
     margin-bottom: 45px;

@@ -10,8 +10,22 @@ const Supplier = require('../../models/supplier');
 const User = require('../../models/users');
 const Cart = require('../../models/cart');
 const Voucher = require('../../models/voucher');
+const Message = require('../../models/message');
+const Subscriber = require('../../models/subscriber');
 
 const { mongooseToObject, singleMongooseObject } = require('../../ult/mongoose');
+
+const nodemailer = require('nodemailer');
+const myEmail = 'sp.yeucongnghe@gmail.com';
+const myPasswork = 'hjgrkdpeplraiuoa';
+var transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: myEmail,
+        pass: myPasswork,
+    },
+});
+
 //  /api/:slug
 function removeFile(path) {
     try {
@@ -43,7 +57,6 @@ class apiController {
         var list = await Categories.find({});
         res.json(list);
     }
-
     async addCategories(req, res, next) {
         var name = req.query.name || req.body.name;
         var description = req.query.description || req.body.description;
@@ -153,6 +166,7 @@ class apiController {
             }
         } else return res.json({ code: 401, message: 'Tên nhà cung cấp không được để trống' });
     }
+
     async removeSupplier(req, res, next) {
         req.body.id;
         var x = await Supplier.findOneAndRemove({ _id: req.body.id });
@@ -390,7 +404,7 @@ class apiController {
         if (x) res.json({ message: 'Đã xóa thành công' });
         else res.json({ code: 401, message: 'Không tìm thấy sản phẩm' });
     }
-    // Thêm vào giỏ hàng
+    // Giỏ hàng
     async addToCart(req, res, next) {
         var productId = req.body.productId,
             quantity = req.body.quantity;
@@ -524,6 +538,7 @@ class apiController {
             });
         return res.json({ message: 'Xóa sản phẩm giỏ hàng thành công' });
     }
+    // Mã giảm giá
     async addVoucher(req, res, next) {
         var code = req.body.code,
             price = req.body.price,
@@ -584,6 +599,82 @@ class apiController {
             message: 'Đã áp dụng mã khuyến mại',
             price: voucher.price,
         });
+    }
+    // Cần liên hệ
+    async addMessage(req, res, next) {
+        var name = req.body.name,
+            email = req.body.email,
+            message = req.body.message;
+        if (!name) return res.json({ code: 401, message: 'Vui lòng nhập họ & tên' });
+        if (!email) return res.json({ code: 401, message: 'Vui lòng nhập Email' });
+        if (!email.match(/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/g))
+            return res.json({ code: 401, message: 'Địa chỉ email không hợp lệ' });
+        if (!message)
+            return res.json({ code: 401, message: 'Vui lòng để lại lời nhắn với cửa hàng' });
+
+        var newMessage = new Message({
+            name: name,
+            email: email,
+            message: message,
+        });
+        newMessage.save();
+        var mailOptions = {
+            from: myEmail,
+            to: email,
+            subject: 'Cảm ơn bạn đã để lại lơi nhắn đến shop - Yêu Công Nghệ',
+            html: `Chúng tôi sẽ liên hệ với bạn sớm nhất<br>
+            <br>
+            <hr>
+            Công ty: yêu công nghệ<br>
+            Website: <a href="#">yeucongnghe.com</a><br>
+            Phone: (+84) 389 619 050<br>
+            Email: ${myEmail}
+            `,
+        };
+        transporter.sendMail(mailOptions, function (error, info) {
+            if (error) {
+                console.log(error);
+            } else {
+                console.log('Email sent: ' + info.response);
+            }
+        });
+        res.json({ message: 'Cửa hàng sẽ liên hệ lại với bạn sau' });
+    }
+    // Đăng ký nhận ưu đãi
+    async addSubscriber(req, res, next) {
+        var email = req.body.email;
+        if (!email) return res.json({ code: 401, message: 'Vui lòng nhập Email' });
+        if (!email.match(/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/g))
+            return res.json({ code: 401, message: 'Địa chỉ Email không hợp lệ' });
+        var newSubscriber = new Subscriber({
+            email: email,
+        });
+        newSubscriber.save();
+        var mailOptions = {
+            from: myEmail,
+            to: email,
+            subject:
+                'Bạn đã đăng ký thành công nhận các thông tin ưu đã từ cửa hàng - Yêu Công Nghệ',
+            html: `Mỗi khi chúng tôi có thông tin ưu đã sẽ gửi Email cho bạn
+            <br>
+            Cảm ở bạn đã quan tâm đến cửa hàng
+            <br>
+            <br>
+            <hr>
+            Công ty: yêu công nghệ<br>
+            Website: <a href="#">yeucongnghe.com</a><br>
+            Phone: (+84) 389 619 050<br>
+            Email: ${myEmail}
+            `,
+        };
+        transporter.sendMail(mailOptions, function (error, info) {
+            if (error) {
+                console.log(error);
+            } else {
+                console.log('Email sent: ' + info.response);
+            }
+        });
+        res.json({ message: 'Bạn đã đăng ký thành công' });
     }
     error(req, res, next) {
         res.json({

@@ -7,7 +7,6 @@ const Cart = require('../../models/cart');
 const Voucher = require('../../models/voucher');
 const Order = require('../../models/order');
 
-const { Schema } = require('mongoose');
 const bcrypt = require('bcrypt');
 
 const fs = require('fs-extra');
@@ -15,17 +14,18 @@ const path = require('path');
 
 const { mongooseToObject, singleMongooseObject } = require('../../ult/mongoose');
 
-const { getD, getID, removeToneVietNamese } = require('../../ult/string');
+const { getID, removeToneVietNamese } = require('../../ult/string');
 var salt = bcrypt.genSaltSync(10);
 
 // Mail
 const nodemailer = require('nodemailer');
-const myEmail = 'quangtrong1506@gmail.com';
+const myEmail = 'sp.yeucongnghe@gmail.com';
+const myPasswork = 'hjgrkdpeplraiuoa';
 var transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
         user: myEmail,
-        pass: 'zvsephtpctdvmcbp',
+        pass: myPasswork,
     },
 });
 
@@ -113,13 +113,13 @@ class HomeController {
             from: myEmail,
             to: email,
             subject: 'Lấy lại mật khẩu - Yêu Công Nghệ',
-            html: `Mật khẩu mới của bạn là:<b>${newPassword}</b> 
+            html: `Mật khẩu mới của bạn là: <b>${newPassword}</b> 
                 <br>Vui lòng đổi mật khẩu khi đăng nhập lại
                 <br>
                 <hr>
                 Nếu bạn không thực hiện hành động này vui lòng bỏ qua tin nhắn
                 <br>
-                <a href="127.0.0.1:3000">Yeucongnghe.vn</a>`,
+                <a href="#">Yeucongnghe.vn</a>`,
         };
         transporter.sendMail(mailOptions, function (error, info) {
             if (error) {
@@ -391,7 +391,6 @@ class HomeController {
                   price: 0,
               };
         var sum = 0;
-        var count = 0;
         var products = [];
         for (let i = 0; i < cartDB.length; i++) {
             var prod = await Product.findOne({ id: cartDB[i].productId });
@@ -403,7 +402,6 @@ class HomeController {
                 }
             );
             sum += (prod.price - prod.priceSale) * cartDB[i].quantity;
-            count += cartDB[i].quantity;
             products.push({
                 id: prod.id,
                 name: prod.name,
@@ -561,7 +559,6 @@ class HomeController {
         });
     }
     async cancelOrder(req, res, next) {
-        var categories = await Categories.find({});
         if (!req.session.login) return res.json({ code: 401, message: 'Vui lòng đăng nhập lại' });
         var id = req.body.id;
         var myOrder = await Order.findOne({
@@ -585,6 +582,16 @@ class HomeController {
                 { status: 'Đã hủy' }
             );
             res.json({ message: 'Bạn đã hủy đơn hàng thành công' });
+            for (let i = 0; i < myOrder.products.length; i++) {
+                var prod = await Product.findOne({ id: myOrder.products[i].id });
+                await Product.findOneAndUpdate(
+                    { id: myOrder.products[i].id },
+                    {
+                        quantity: prod.quantity + myOrder.products[i].quantity,
+                        sold: prod.sold - myOrder.products[i].quantity,
+                    }
+                );
+            }
         } else if (myOrder.status == 'Đã hủy')
             res.json({ code: 401, message: 'Đơn hàng này đã được hủy' });
         else res.json({ code: 401, message: 'Đơn hàng không thể hủy' });
