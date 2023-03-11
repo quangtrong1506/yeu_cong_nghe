@@ -12,6 +12,7 @@
             var containerEl = document.querySelector('.featured__filter');
             var mixer = mixitup(containerEl);
         }
+        updateCart();
     });
     $('.set-bg').each(function () {
         var bg = $(this).data('setbg');
@@ -479,11 +480,10 @@ function actionLinkForgotPassword() {
       placeholder="Phone or email"
       autocomplete="off"
       onkeydown="onKeydownPassInput_1(event)"/>
-    <span class="login__mes-1" style="color: red; display: none"
-      >Tài khoản không tồn tại</span>
+    <span class="login__mes-1" style="color: red; display: none">Tài khoản không tồn tại</span>
     <button
       type="button"
-      class="btn btn-form mt-2 center--btn dn--btn">
+      class="btn btn-form mt-2 center--btn dn--btn" onclick="forgotPassword()">
       Xác nhận
     </button>
   </div>
@@ -501,6 +501,37 @@ function actionLinkForgotPassword() {
             closeFormLogin();
         };
     }
+}
+function forgotPassword() {
+    var email = document.getElementById('username').value;
+    var settings = {
+        url: '/user/quen-mat-khau',
+        method: 'POST',
+        timeout: 0,
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        data: JSON.stringify({
+            email: email,
+        }),
+    };
+
+    $.ajax(settings).done(function (response) {
+        if (typeof response != 'object') response = JSON.parse(response);
+        var icon = response.code == 401 ? 'warning' : 'success';
+        Swal.fire({
+            title: '',
+            text: response.message,
+            icon: icon,
+            button: {
+                confirm: {
+                    text: 'Xác nhận',
+                    visible: true,
+                    closeModal: true,
+                },
+            },
+        });
+    });
 }
 
 var arrBtnLogin = document.querySelectorAll('.header__top__right__auth span.login--btn');
@@ -573,6 +604,48 @@ function updateCart() {
         if (response.code != 401) {
             document.getElementById('cart-count').innerHTML = response.count;
             document.getElementById('cart-price').innerHTML = response.sumText;
+        }
+    });
+}
+function huyDH(id) {
+    var settings = {
+        url: '/user/cancel-order',
+        method: 'POST',
+        timeout: 0,
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        data: JSON.stringify({
+            id: id,
+        }),
+    };
+
+    Swal.fire({
+        title: 'Thông báo',
+        icon: 'question',
+        text: 'Bạn xác nhận hủy đơn hàng này',
+        focusConfirm: true,
+        showCancelButton: true,
+        confirmButtonText: 'Xác nhận',
+        cancelButtonText: 'Hủy',
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax(settings).done(function (response) {
+                if (typeof response != 'object') response = JSON.parse(response);
+                var icon = response.code == 401 ? 'error' : 'success';
+                Swal.fire({
+                    title: 'Thông báo',
+                    icon: icon,
+                    html: response.message,
+                    focusConfirm: true,
+                    confirmButtonText: 'Xác nhận',
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        if (response.message.match('thành công')) return location.reload();
+                        if (response.message.match('đăng nhập lại')) loginInHeader();
+                    }
+                });
+            });
         }
     });
 }

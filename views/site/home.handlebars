@@ -72,13 +72,12 @@
                         {{#if this.stop}}
                         <div class="sale" style="background-color: blueviolet;">Ngừng kinh doanh</div>
                         {{else}}
+                        {{#if this.quantity}}
                         {{#if this.sale}}
                         <div class="sale">-{{this.present}}%</div>
-                        {{else}}
-                        {{#if this.quantity}}
+                        {{/if}}
                         {{else}}
                          <div class="sale">Hết hàng</div>
-                        {{/if}}
                         {{/if}}
                         {{/if}}
                     </div>
@@ -116,64 +115,21 @@
                 <div class='latest-product__text'>
                     <h4>Bán chạy</h4>
                     <div class='latest-product__slider owl-carousel'>
+                        {{#each prodBC}}
                         <div class='latest-prdouct__slider__item'>
-                            <a href='#' class='latest-product__item'>
+                            {{#each this}}
+                            <a href='/san-pham/{{this.slug}}' class='latest-product__item'>
                                 <div class='latest-product__item__pic'>
-                                    <img src='img/latest-product/lp-1.jpg' alt='' />
+                                    <img src='/images/product/{{this.images.[0]}}' alt='{{this.images.[0]}}' />
                                 </div>
                                 <div class='latest-product__item__text'>
-                                    <h6>Tên sản phẩm demo</h6>
-                                    <span>150,000 đ</span>
+                                    <h6>{{this.name}}</h6>
+                                    <span class="price">{{this.price}}</span>
                                 </div>
                             </a>
-                            <a href='#' class='latest-product__item'>
-                                <div class='latest-product__item__pic'>
-                                    <img src='img/latest-product/lp-2.jpg' alt='' />
-                                </div>
-                                <div class='latest-product__item__text'>
-                                    <h6>Tên sản phẩm demo</h6>
-                                    <span>150,000 đ</span>
-                                </div>
-                            </a>
-                            <a href='#' class='latest-product__item'>
-                                <div class='latest-product__item__pic'>
-                                    <img src='img/latest-product/lp-3.jpg' alt='' />
-                                </div>
-                                <div class='latest-product__item__text'>
-                                    <h6>Tên sản phẩm demo</h6>
-                                    <span>150,000 đ</span>
-                                </div>
-                            </a>
+                            {{/each}}
                         </div>
-                        <div class='latest-prdouct__slider__item'>
-                            <a href='#' class='latest-product__item'>
-                                <div class='latest-product__item__pic'>
-                                    <img src='img/latest-product/lp-1.jpg' alt='' />
-                                </div>
-                                <div class='latest-product__item__text'>
-                                    <h6>Tên sản phẩm demo</h6>
-                                    <span>150,000 đ</span>
-                                </div>
-                            </a>
-                            <a href='#' class='latest-product__item'>
-                                <div class='latest-product__item__pic'>
-                                    <img src='img/latest-product/lp-2.jpg' alt='' />
-                                </div>
-                                <div class='latest-product__item__text'>
-                                    <h6>Tên sản phẩm demo</h6>
-                                    <span>150,000 đ</span>
-                                </div>
-                            </a>
-                            <a href='#' class='latest-product__item'>
-                                <div class='latest-product__item__pic'>
-                                    <img src='img/latest-product/lp-3.jpg' alt='' />
-                                </div>
-                                <div class='latest-product__item__text'>
-                                    <h6>Tên sản phẩm demo</h6>
-                                    <span>150,000 đ</span>
-                                </div>
-                            </a>
-                        </div>
+                        {{/each}}
                     </div>
                 </div>
             </div>
@@ -193,64 +149,26 @@
             </div>
         </div>
         <div class='row'>
+        {{#each news}}
             <div class='col-lg-4 col-md-4 col-sm-6'>
                 <div class='blog__item'>
                     <div class='blog__item__pic'>
-                        <img src='img/blog/blog-1.jpg' alt='' />
+                        <img src='/images/news/{{this.image}}' alt='{{this.image}}' />
                     </div>
                     <div class='blog__item__text'>
                         <h5>
-                            <a href='#'>Hướng dẫn chọn mua điện thoại đúng chuẩn, không lo mua nhầm</a>
+                            <a href='/bai-viet/{{this.slug}}'>{{this.title}}</a>
                         </h5>
                         <ul>
-                            <li><i class='fa fa-calendar-o'></i> 20/04/2022</li>
-                            <li><i class='fa fa-eye' aria-hidden='true'></i>5</li>
+                            <li><i class='fa fa-calendar-o'></i> {{this.time}}</li>
                         </ul>
                         <p>
-                            Hiện nay, trên thị trường có 2 loại điện thoại phổ biến mà chúng ta
-                            thường thấy đó chính là: điện thoại thông minh (hay còn gọi là
-                            smartphone) và điện thoại phổ thông.
+                            
                         </p>
                     </div>
                 </div>
             </div>
-            <div class='col-lg-4 col-md-4 col-sm-6'>
-                <div class='blog__item'>
-                    <div class='blog__item__pic'>
-                        <img src='img/blog/blog-2.jpg' alt='' />
-                    </div>
-                    <div class='blog__item__text'>
-                        <h5><a href='#'>Các giữ điên thoại bền như mới mua</a></h5>
-                        <ul>
-                            <li><i class='fa fa-calendar-o'></i> 20/04/2022</li>
-                            <li><i class='fa fa-eye' aria-hidden='true'></i>5</li>
-                        </ul>
-                        <p>
-                            Bạn muốn chiếc điện thoại của bạn mới như chiếc điện thoại mới mua, hãy
-                            xem nội dung bài viết sau
-                        </p>
-                    </div>
-                </div>
-            </div>
-            <div class='col-lg-4 col-md-4 col-sm-6'>
-                <div class='blog__item'>
-                    <div class='blog__item__pic'>
-                        <img src='img/blog/blog-3.jpg' alt='' />
-                    </div>
-                    <div class='blog__item__text'>
-                        <h5><a href='#'>Điện thoại Samsung Galaxy S22 Ultra 5G 256GB nhược điểm hệ
-                                điều hành Android</a></h5>
-                        <ul>
-                            <li><i class='fa fa-calendar-o'></i> 20/04/2022</li>
-                            <li><i class='fa fa-eye' aria-hidden='true'></i>5</li>
-                        </ul>
-                        <p>
-                            Do tính chất mã nguồn mở nên phần mềm được kiểm soát có chất lượng không
-                            được đảm bảo, nên rất dễ bị nhiễm phần mềm độc hại và virus.
-                        </p>
-                    </div>
-                </div>
-            </div>
+        {{/each}}
         </div>
     </div>
 </section>

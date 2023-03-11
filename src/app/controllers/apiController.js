@@ -195,7 +195,7 @@ class apiController {
         if (prod) return res.json({ code: 401, message: 'ID đã tồn tại không thể thêm' });
 
         var message = 'Thêm sản phẩm thành công',
-            statusMessage = -1;
+            code = 401;
         if (!id) id = getID(8);
         if (!name) message = 'Tên sản phẩm đang bị để trống';
         else if (!quantity) message = 'Chưa nhập số lượng sản phẩm';
@@ -247,7 +247,7 @@ class apiController {
                     }"`;
                 else return `img `;
             });
-            statusMessage = 1;
+            code = 1;
             //? Tạo sản phẩm trong cơ sở dữ liệu mới
             var product = new Product({
                 id: id,
@@ -265,7 +265,7 @@ class apiController {
             });
             product.save();
         }
-        return res.json({ status: statusMessage, message: message });
+        res.json({ code: code, message: message });
     }
     //? Post
     async editProduct(req, res, next) {
@@ -299,7 +299,7 @@ class apiController {
         if (!prod) return res.json({ code: 401, message: 'ID không tồn tại' });
 
         var message = 'Sửa thông tin sản phẩm thành công',
-            statusMessage = -1;
+            statusMessage = 401;
         if (!name) message = 'Tên sản phẩm đang bị để trống';
         else if (!quantity) message = 'Chưa nhập số lượng sản phẩm';
         else if (!status || status == -1) message = 'Vui lòng chọn trạng thái của sản phẩm';
@@ -377,7 +377,7 @@ class apiController {
             product.save();
         }
 
-        return res.json({ status: statusMessage, message: message });
+        return res.json({ code: statusMessage, message: message });
     }
     // ? post
     async removeProduct(req, res, next) {
@@ -452,7 +452,7 @@ class apiController {
             count = 0;
         for (let i = 0; i < cartDB.length; i++) {
             var prod = await Product.findOne({ id: cartDB[i].productId });
-            sum += prod.price * cartDB[i].quantity;
+            sum += (prod.price - prod.priceSale) * cartDB[i].quantity;
             count += cartDB[i].quantity;
         }
         var sumText = new Intl.NumberFormat('vi-VN', {
@@ -583,6 +583,12 @@ class apiController {
         res.json({
             message: 'Đã áp dụng mã khuyến mại',
             price: voucher.price,
+        });
+    }
+    error(req, res, next) {
+        res.json({
+            code: 404,
+            message: 'API không tồn tại',
         });
     }
 }

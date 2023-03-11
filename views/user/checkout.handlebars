@@ -26,19 +26,19 @@
                             </div>
                             <div class="checkout__input">
                                 <p>Địa chỉ<span>*</span></p>
-                                <input type="text" name="address" placeholder="Số nhà, quận huyện, Tỉnh, Thành Phố" class="checkout__input__add" value="{{session.userInfo.address}}">
+                                <input type="text" id="address" name="address" placeholder="Số nhà, quận huyện, Tỉnh, Thành Phố" class="checkout__input__add" value="{{session.userInfo.address}}">
                             </div>
                             <div class="row">
                                 <div class="col-lg-6">
                                     <div class="checkout__input">
                                         <p>Số điện thoại<span>*</span></p>
-                                        <input type="tel" name="phone" value="{{session.userInfo.phone}}"  placeholder="Số điện thoại">
+                                        <input type="tel" id="phone" name="phone" value="{{session.userInfo.phone}}"  placeholder="Số điện thoại">
                                     </div>
                                 </div>
                                 <div class="col-lg-6">
                                     <div class="checkout__input">
                                         <p>Email</p>
-                                        <input type="email" name="email" value="{{session.userInfo.email}}" placeholder="Email">
+                                        <input type="email" id="email" name="email" value="{{session.userInfo.email}}" placeholder="Email">
                                     </div>
                                 </div>
                             </div>
@@ -58,7 +58,7 @@
                                     {{/each}}
                                 </ul>
                                 <div class="checkout__order__subtotal">Tổng tiền hàng <span>{{total}}</span></div>
-                                <div class="checkout__order__coupons">Giảm giá<span id="discount" data-code"{{code}}">-{{discount}}</span></div>
+                                <div class="checkout__order__coupons">Giảm giá<span id="discount" data-code="{{code}}">-{{discount}}</span></div>
                                 <div class="checkout__order__transport-fee">Phí vận chuyển <span>{{ship}}</span></div>
                                 <div class="checkout__order__total">Thanh toán <span>{{pay}}</span></div>
                                 <div class="checkout__input__checkbox">
@@ -104,12 +104,12 @@
     </section>
     <script>
         function datHang(){
-            var name = document.getElementById("name");
-            var phone = document.getElementById("phone");
-            var email = document.getElementById("email");
-            var address = document.getElementById("address");
-            var note = document.getElementById("note");
-            var code = document.getElementById("discount").getAttribute("data-value");
+            var name = document.getElementById("name").value;
+            var phone = document.getElementById("phone").value;
+            var email = document.getElementById("email").value;
+            var address = document.getElementById("address").value;
+            var note = document.getElementById("note").value;
+            var code = document.getElementById("discount").getAttribute("data-code")||"";
             var settings = {
                 url: '/user/checkout',
                 method: 'POST',
@@ -128,7 +128,24 @@
             };
 
             $.ajax(settings).done(function (response) {
-                
+                var icon = response.code == 401 ? "error" : "success";
+                Swal.fire({
+                    title: 'Thông báo',
+                    icon: icon,
+                    html:response.message,
+                    focusConfirm: true,
+                    confirmButtonText:
+                        'Xác nhận',
+                    }).then((result)=>{
+                        if (result.isConfirmed){
+                            if(response.message.match("thành công"))
+                            return location.href = "/user/chi-tiet-don-hang?id="+response.cartId
+                            if(response.message.match("đã thanh toán"))
+                            return location.href = "/user/don-hang"
+                            if(response.message.match("đăng nhập lại"))
+                            loginInHeader()
+                        }
+                    })
             });
         }
     </script>

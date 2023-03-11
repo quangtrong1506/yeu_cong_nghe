@@ -44,8 +44,8 @@
                         ></i>
                         <div class='info'>
                             <h4>Tổng đơn hàng</h4>
-                            <p><b>247 đơn hàng</b></p>
-                            <p class='info-tong'>Tổng số hóa đơn bán hàng trong tháng.</p>
+                            <p><b>{{orderCount}} đơn hàng</b></p>
+                            <p class='info-tong'>Tổng số hóa đơn đã bán.</p>
                         </div>
                     </div>
                 </div>
@@ -64,7 +64,7 @@
                 <!-- col-12 -->
                 <div class='col-md-12'>
                     <div class='tile'>
-                        <h3 class='tile-title'>Tình trạng đơn hàng</h3>
+                        <h3 class='tile-title'>Đơn hàng mới</h3>
                         <div>
                             <table class='table table-bordered'>
                                 <thead>
@@ -76,39 +76,28 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr>
-                                        <td>AL3947</td>
-                                        <td>Phạm Thị Ngọc</td>
-                                        <td>
-                                            19.770.000 đ
-                                        </td>
-                                        <td><span class='badge bg-info'>Chờ xử lý</span></td>
-                                    </tr>
-                                    <tr>
-                                        <td>ER3835</td>
-                                        <td>Nguyễn Thị Mỹ Yến</td>
-                                        <td>
-                                            16.770.000 đ
-                                        </td>
-                                        <td><span class='badge bg-warning'>Đang vận chuyển</span></td>
-                                    </tr>
-                                    <tr>
-                                        <td>MD0837</td>
-                                        <td>Triệu Thanh Phú</td>
-                                        <td>
-                                            9.400.000 đ
-                                        </td>
-                                        <td><span class='badge bg-success'>Đã hoàn thành</span></td>
-                                    </tr>
-                                    <tr>
-                                        <td>MT9835</td>
-                                        <td>Đặng Hoàng Phúc </td>
-                                        <td>
-                                            40.650.000 đ
-                                        </td>
-                                        <td><span class='badge bg-danger'>Đã hủy
-                                            </span></td>
-                                    </tr>
+                                    {{#each newOrders}}
+                                        <tr>
+                                            <td>#{{this.id}}</td>
+                                            <td>{{this.userName}}</td>
+                                            <td>{{this.totalText}}</td>
+                                            <td>
+                                                {{#if check.a}}
+                                                <span class='badge bg-success'>{{this.status}}</span>
+                                                {{/if}}
+                                                {{#if check.b}}
+                                                <span class='badge bg-info'>{{this.status}}</span>
+                                                {{/if}}
+                                                {{#if check.c}}
+                                                <span class='badge bg-warning'>{{this.status}}</span>
+                                                {{/if}}
+                                                {{#if check.d}}
+                                                <span class='badge bg-danger'>{{this.status}}</span>
+                                                {{/if}}
+
+                                            </td>
+                                        </tr>
+                                    {{/each}}
                                 </tbody>
                             </table>
                         </div>

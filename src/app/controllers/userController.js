@@ -5,6 +5,7 @@ const Supplier = require('../../models/supplier');
 const User = require('../../models/users');
 const Cart = require('../../models/cart');
 const Voucher = require('../../models/voucher');
+const Order = require('../../models/order');
 
 const { Schema } = require('mongoose');
 const bcrypt = require('bcrypt');
@@ -13,8 +14,20 @@ const fs = require('fs-extra');
 const path = require('path');
 
 const { mongooseToObject, singleMongooseObject } = require('../../ult/mongoose');
+
 const { getD, getID, removeToneVietNamese } = require('../../ult/string');
 var salt = bcrypt.genSaltSync(10);
+
+// Mail
+const nodemailer = require('nodemailer');
+const myEmail = 'quangtrong1506@gmail.com';
+var transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: myEmail,
+        pass: 'zvsephtpctdvmcbp',
+    },
+});
 
 function removeFile(path) {
     try {
@@ -81,6 +94,43 @@ class HomeController {
         session.login = true;
         session.userInfo = userP;
         res.json({ code: 1, message: 'Đăng nhập thành công' });
+    }
+    async forgotPassword(req, res, next) {
+        var email = req.body.email;
+        var userDB = await User.findOne({ email: email });
+        if (!email.match(/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/g))
+            return res.json({ code: 401, message: 'Địa chỉ email không hợp lệ' });
+        if (!userDB) return res.json({ code: 401, message: 'Địa chỉ Email này chưa được đăng ký' });
+        var newPassword = getID(8);
+        var password = bcrypt.hashSync(newPassword, salt);
+        await User.findOneAndUpdate(
+            { email: email },
+            {
+                password: password,
+            }
+        );
+        var mailOptions = {
+            from: myEmail,
+            to: email,
+            subject: 'Lấy lại mật khẩu - Yêu Công Nghệ',
+            html: `Mật khẩu mới của bạn là:<b>${newPassword}</b> 
+                <br>Vui lòng đổi mật khẩu khi đăng nhập lại
+                <br>
+                <hr>
+                Nếu bạn không thực hiện hành động này vui lòng bỏ qua tin nhắn
+                <br>
+                <a href="127.0.0.1:3000">Yeucongnghe.vn</a>`,
+        };
+        transporter.sendMail(mailOptions, function (error, info) {
+            if (error) {
+                console.log(error);
+            } else {
+                console.log('Email sent: ' + info.response);
+            }
+        });
+        res.json({
+            message: 'Mật khẩu đã được chuyển về email của bạn',
+        });
     }
     async logout(req, res, next) {
         res.setHeader('Access-Control-Allow-Credentials', 'true');
@@ -209,7 +259,7 @@ class HomeController {
         var count = 0;
         for (let i = 0; i < cartDB.length; i++) {
             var prod = await Product.findOne({ id: cartDB[i].productId });
-            sum += prod.price * cartDB[i].quantity;
+            sum += (prod.price - prod.priceSale) * cartDB[i].quantity;
             cartDB[i].price = new Intl.NumberFormat('vi-VN', {
                 style: 'currency',
                 currency: 'VND',
@@ -242,7 +292,7 @@ class HomeController {
     async viewThanhToan(req, res, next) {
         var categories = await Categories.find({});
         var code = req.body.code;
-
+        var ship = req.body.ship || 30000;
         if (!req.session.login)
             return res.render('user/checkout', {
                 title: 'Thanh toán',
@@ -262,7 +312,7 @@ class HomeController {
         var count = 0;
         for (let i = 0; i < cartDB.length; i++) {
             var prod = await Product.findOne({ id: cartDB[i].productId });
-            sum += prod.price * cartDB[i].quantity;
+            sum += (prod.price - prod.priceSale) * cartDB[i].quantity;
             cartDB[i].price = new Intl.NumberFormat('vi-VN', {
                 style: 'currency',
                 currency: 'VND',
@@ -282,11 +332,11 @@ class HomeController {
         var pay = new Intl.NumberFormat('vi-VN', {
             style: 'currency',
             currency: 'VND',
-        }).format(total2 + 30000);
+        }).format(total2 + ship);
         var ship = new Intl.NumberFormat('vi-VN', {
             style: 'currency',
             currency: 'VND',
-        }).format(30000);
+        }).format(ship);
         var discountPrice = total2 == 0 ? sum : discount.price;
         var discountText = new Intl.NumberFormat('vi-VN', {
             style: 'currency',
@@ -303,65 +353,241 @@ class HomeController {
             ship: ship,
             pay: pay,
             discount: discountText,
+            code: code,
         });
     }
     async checkout(req, res, next) {
         var code = req.body.code;
+        var name = req.body.name,
+            address = req.body.address,
+            phone = req.body.phone,
+            email = req.body.email,
+            note = req.body.note;
         if (!req.session.login) return res.json({ code: 401, message: 'Vui lòng đăng nhập lại' });
+        if (!name) return res.json({ code: 401, message: 'Vui lòng nhập họ & tên của bạn' });
+        if (!address) return res.json({ code: 401, message: 'Vui lòng nhập địa chỉ nhận hàng' });
+        if (!phone) return res.json({ code: 401, message: 'Vui lòng nhập số điện thoại của bạn' });
+        if (!phone.match(/(84|0[3|5|7|8|9])+([0-9]{8})\b/im))
+            return res.json({ code: 401, message: 'Số điện thoại không hợp lệ' });
+        if (email.length > 0 && !email.match(/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/im))
+            return res.json({ code: 401, message: 'Email không hợp lệ' });
+        var cartDB = await Cart.find({ userId: req.session.userInfo.id });
+        cartDB = mongooseToObject(cartDB);
+        if (cartDB.length == 0)
+            return res.json({ code: 401, message: 'Bạn đã thanh toán những sản phẩm này' });
         var discount = await Voucher.findOne({ code: code });
+        if (discount) {
+            var tmp = singleMongooseObject(discount);
+            var arr = tmp.userUsed;
+            arr.push(req.session.userInfo.id);
+            await Voucher.findOneAndUpdate(
+                { code: code },
+                { quantity: discount.quantity - 1, userUsed: arr }
+            );
+        }
         discount = discount
             ? singleMongooseObject(discount)
             : {
                   price: 0,
               };
-        var cartDB = await Cart.find({ userId: req.session.userInfo.id });
-        cartDB = mongooseToObject(cartDB);
         var sum = 0;
         var count = 0;
+        var products = [];
         for (let i = 0; i < cartDB.length; i++) {
             var prod = await Product.findOne({ id: cartDB[i].productId });
-            sum += prod.price * cartDB[i].quantity;
-            cartDB[i].price = new Intl.NumberFormat('vi-VN', {
-                style: 'currency',
-                currency: 'VND',
-            }).format(prod.price - prod.priceSale);
-            cartDB[i].total = new Intl.NumberFormat('vi-VN', {
-                style: 'currency',
-                currency: 'VND',
-            }).format((prod.price - prod.priceSale) * cartDB[i].quantity);
-            cartDB[i].name = prod.name;
+            await Product.findOneAndUpdate(
+                { id: cartDB[i].productId },
+                {
+                    quantity: prod.quantity - cartDB[i].quantity,
+                    sold: prod.sold + cartDB[i].quantity,
+                }
+            );
+            sum += (prod.price - prod.priceSale) * cartDB[i].quantity;
             count += cartDB[i].quantity;
+            products.push({
+                id: prod.id,
+                name: prod.name,
+                price: prod.price - prod.priceSale,
+                total: (prod.price - prod.priceSale) * cartDB[i].quantity,
+                quantity: cartDB[i].quantity,
+            });
         }
-        var total = new Intl.NumberFormat('vi-VN', {
-            style: 'currency',
-            currency: 'VND',
-        }).format(sum);
         var total2 = sum - discount.price < 0 ? 0 : sum - discount.price;
-        var pay = new Intl.NumberFormat('vi-VN', {
-            style: 'currency',
-            currency: 'VND',
-        }).format(total2 + 30000);
-        var ship = new Intl.NumberFormat('vi-VN', {
-            style: 'currency',
-            currency: 'VND',
-        }).format(30000);
-        var discountPrice = total2 == 0 ? sum : discount.price;
-        var discountText = new Intl.NumberFormat('vi-VN', {
-            style: 'currency',
-            currency: 'VND',
-        }).format(discountPrice);
-        res.render('user/checkout', {
-            title: 'Thanh toán',
+        total2 = total2 + 30000;
+        var sum = sum < 0 ? 0 : sum;
+        sum = sum;
+
+        var id = getID(8);
+        var newOrder = new Order({
+            id: id,
+            userId: req.session.userInfo.id,
+            products: products,
+            total: total2,
+            sum: sum,
+            userName: name,
+            address: address,
+            phone: phone,
+            email: email,
+            discount: discount.price,
+            note: note,
+            status: 'Chờ xác nhận',
+        });
+        newOrder.save();
+        var cartAll = await Cart.find({});
+        cartAll = mongooseToObject(cartAll);
+        for (let i = 0; i < cartAll.length; i++) {
+            if (cartAll[i].userId == req.session.userInfo.id)
+                await Cart.findByIdAndRemove(cartAll[i]._id);
+        }
+        res.json({ message: 'Bạn đã đặt hàng thành công', cartId: id });
+    }
+    async viewOrder(req, res, next) {
+        var categories = await Categories.find({});
+        if (!req.session.login)
+            return res.render('user/orders', {
+                title: 'Đơn hàng của bạn',
+                layout: 'main',
+                session: req.session,
+                categories: mongooseToObject(categories),
+            });
+        var myOrders = await Order.find({
+            userId: req.session.userInfo.id,
+        }).sort({ createdAt: -1 });
+        myOrders = mongooseToObject(myOrders);
+        for (let i = 0; i < myOrders.length; i++) {
+            const element = myOrders[i];
+            if (
+                element.status == 'Chờ xác nhận' ||
+                element.status == 'Đã xác nhận' ||
+                element.status == 'Người bán đang chuẩn bị đơn hàng của bạn'
+            )
+                element.canCancel = true;
+            if (element.total > 0)
+                element.total = new Intl.NumberFormat('vi-VN', {
+                    style: 'currency',
+                    currency: 'VND',
+                }).format(element.total);
+            if (element.discount > 0)
+                element.discount = new Intl.NumberFormat('vi-VN', {
+                    style: 'currency',
+                    currency: 'VND',
+                }).format(element.discount);
+        }
+        res.render('user/orders', {
+            title: 'Đơn hàng của bạn',
             layout: 'main',
             session: req.session,
             categories: mongooseToObject(categories),
-            total: total,
-            cart: cartDB,
-            count: count,
-            ship: ship,
-            pay: pay,
-            discount: discountText,
+            count: myOrders.length,
+            orders: myOrders,
         });
+    }
+    async orderDetails(req, res, next) {
+        var categories = await Categories.find({});
+        if (!req.session.login)
+            return res.render('user/order-details', {
+                title: 'Chi tiết đơn hàng',
+                layout: 'main',
+                session: req.session,
+                categories: mongooseToObject(categories),
+            });
+
+        var id = req.query.id;
+        var myOrder = await Order.findOne({
+            id: id,
+        });
+        if (!myOrder)
+            return res.render('user/order-details', {
+                title: 'Đơn hàng không tồn tại',
+                layout: 'main',
+                session: req.session,
+                categories: mongooseToObject(categories),
+                count: 0,
+            });
+        myOrder = singleMongooseObject(myOrder);
+        if (myOrder.ship > 0)
+            myOrder.ship = new Intl.NumberFormat('vi-VN', {
+                style: 'currency',
+                currency: 'VND',
+            }).format(myOrder.ship);
+        if (myOrder.discount > 0)
+            myOrder.discount = new Intl.NumberFormat('vi-VN', {
+                style: 'currency',
+                currency: 'VND',
+            }).format(myOrder.discount);
+        if (myOrder.total > 0)
+            myOrder.total = new Intl.NumberFormat('vi-VN', {
+                style: 'currency',
+                currency: 'VND',
+            }).format(myOrder.total);
+        if (myOrder.sum > 0)
+            myOrder.sum = new Intl.NumberFormat('vi-VN', {
+                style: 'currency',
+                currency: 'VND',
+            }).format(myOrder.sum);
+
+        for (let i = 0; i < myOrder.products.length; i++) {
+            const element = myOrder.products[i];
+            element.price = new Intl.NumberFormat('vi-VN', {
+                style: 'currency',
+                currency: 'VND',
+            }).format(element.price);
+            element.total = new Intl.NumberFormat('vi-VN', {
+                style: 'currency',
+                currency: 'VND',
+            }).format(element.total);
+        }
+        var time = new Date(myOrder.createdAt);
+        var date = time.getDate() < 10 ? '0' + time.getDate() : time.getDate();
+        var month = time.getMonth() + 1 < 10 ? '0' + (time.getMonth() + 1) : time.getMonth() + 1;
+        var minute =
+            time.getMinutes() + 1 < 10 ? '0' + (time.getMinutes() + 1) : time.getMinutes() + 1;
+        var hour = time.getHours() + 1 < 10 ? '0' + (time.getHours() + 1) : time.getHours() + 1;
+        var dateTime = date + '/' + month + '/' + time.getFullYear() + ' ' + hour + ':' + minute;
+        myOrder.createdAt = dateTime;
+        if (
+            myOrder.status == 'Chờ xác nhận' ||
+            myOrder.status == 'Đã xác nhận' ||
+            myOrder.status.match('Chuẩn bị')
+        )
+            myOrder.canCancel = true;
+        res.render('user/order-details', {
+            title: 'Chi tiết đơn hàng',
+            layout: 'main',
+            session: req.session,
+            categories: mongooseToObject(categories),
+            count: 1,
+            order: myOrder,
+        });
+    }
+    async cancelOrder(req, res, next) {
+        var categories = await Categories.find({});
+        if (!req.session.login) return res.json({ code: 401, message: 'Vui lòng đăng nhập lại' });
+        var id = req.body.id;
+        var myOrder = await Order.findOne({
+            id: id,
+        });
+        if (!myOrder)
+            return res.json({
+                message: 'Đơn hàng không tồn tại',
+                code: 401,
+            });
+        myOrder = singleMongooseObject(myOrder);
+        if (
+            myOrder.status == 'Chờ xác nhận' ||
+            myOrder.status == 'Đã xác nhận' ||
+            myOrder.status == 'Người bán đang chuẩn bị đơn hàng của bạn'
+        ) {
+            var myOrder = await Order.findOneAndUpdate(
+                {
+                    id: id,
+                },
+                { status: 'Đã hủy' }
+            );
+            res.json({ message: 'Bạn đã hủy đơn hàng thành công' });
+        } else if (myOrder.status == 'Đã hủy')
+            res.json({ code: 401, message: 'Đơn hàng này đã được hủy' });
+        else res.json({ code: 401, message: 'Đơn hàng không thể hủy' });
     }
 }
 

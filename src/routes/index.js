@@ -8,6 +8,7 @@ function route(app) {
     app.get('/admin/:slug', adminRouter);
     app.get('/admin', adminRouter);
     app.get('/san-pham/:slug', siteRouter);
+    app.get('/bai-viet/:slug', siteRouter);
     app.get('/api/:slug', apiRouter);
     app.get('/user/:slug', userRouter);
     app.get('/san-pham', siteRouter);

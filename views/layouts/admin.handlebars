@@ -26,6 +26,7 @@
             href='https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.2/jquery-confirm.min.css'
         />
         <link rel='shortcut icon' href='/img/front-end/favicon.jpg' type='image/x-icon' />
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     </head>
 
@@ -105,6 +106,12 @@
                         <span class='app-menu__label'>Quản lý danh mục</span>
                     </a>
                 </li>
+                <li>
+                    <a class='app-menu__item' href='/admin/quan-ly-bai-viet'>
+                        <i class="app-menu__icon bx bxs-news" ></i>
+                        <span class='app-menu__label'>Quản lý bài viết</span>
+                    </a>
+                </li>
 
             </ul>
         </aside>
@@ -135,6 +142,7 @@
         {{! QUản lý sản phẩm }}
         <script>
             $('#product-table').DataTable({ "order": [] });
+            $('#sampleTable').DataTable({ "order": [] });
         </script>
     </body>
 

@@ -8,6 +8,7 @@ const siteController = require('../app/controllers/siteController');
 router.use('/san-pham/:slug', siteController.productDetails);
 router.use('/san-pham', siteController.product);
 router.use('/tin-tuc', siteController.news);
+router.use('/bai-viet/:slug', siteController.newsDetails);
 router.use('/lien-he', siteController.contact);
 router.use('/:slug', siteController.error);
 router.use('/', siteController.index);

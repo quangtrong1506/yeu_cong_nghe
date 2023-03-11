@@ -17,7 +17,7 @@
               <a href='/user/don-hang'>Đơn hàng</a>
             </li>
             <li>
-              <a href='/user/logout'>Đăng xuất</a>
+              <a href='/user/dang-xuat'>Đăng xuất</a>
             </li>
           </ul>
         </div>
@@ -151,5 +151,15 @@
       type: mimeString
     });
   }
-   
+   window.onload = ()=>{
+    if(document.getElementById("avatar-choice") || document.getElementById("old-password"))
+                {
+                    {{#if session.login}}
+                    if(document.getElementById("avatar-choice"))
+                    ConvertImgToBase64(document.getElementById("avatar-choice"));
+                    {{else}}
+                    loginInHeader()
+                {{/if}}
+                }
+   }
 </script>

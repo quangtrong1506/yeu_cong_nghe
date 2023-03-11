@@ -423,10 +423,10 @@ async function saveProduct() {
     $.ajax(settings)
         .done((data) => {
             data = JSON.parse(data);
-            var status = data.status,
+            var code = data.code,
                 message = data.message;
             alert(message);
-            if (status != 401) window.location = 'quan-ly-san-pham';
+            if (code != 401) window.location = 'quan-ly-san-pham';
         })
         .fail((e) => {
             console.log(e);

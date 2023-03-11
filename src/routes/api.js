@@ -37,6 +37,6 @@ router.use('/api/check-voucher', apiController.checkVoucher);
 //? up ảnh tạm cho ck-editor // fileUploadTemp
 router.use('/api/upload-images-ck-editor', apiController.fileUploadTemp);
 // router.use('/api/add-product', apiController.addProduct);
-router.use('/api/:slug', siteController.error);
+router.use('/api/:slug', apiController.error);
 
 module.exports = router;

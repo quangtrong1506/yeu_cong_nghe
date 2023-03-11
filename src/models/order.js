@@ -7,15 +7,17 @@ const Order = new Schema(
     {
         id: { type: String, default: getID(8) },
         userId: { type: String },
-        product: { type: Array, default: [] },
+        products: { type: Array, default: [] },
         userName: { type: String },
+        address: { type: String },
         phone: { type: String },
         email: { type: String },
         total: { type: Number, default: 0 },
         ship: { type: Number, default: 30000 },
+        sum: { type: Number, default: 0 },
         discount: { type: Number, default: 0 },
         note: { type: String },
-        type: { type: String },
+        status: { type: String },
     },
     { timestamps: true }
 );

@@ -9,7 +9,6 @@ const Admin = new Schema(
         name: { type: String },
         email: String,
         phone: String,
-        address: String,
         password: String,
         avatar: { type: String, default: 'default.png' },
     },

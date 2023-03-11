@@ -42,7 +42,7 @@ route(app);
 
 //sever
 
-var port = 3001;
+var port = 3000;
 app.listen(port, () => {
     console.log(`Đã chạy sever thành công (http://localhost:${port})`);
 });
