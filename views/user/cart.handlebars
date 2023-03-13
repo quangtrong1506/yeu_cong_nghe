@@ -75,7 +75,7 @@
                             <li>Giảm giá <span id="discount-value" data-code="" data-value="0">- 0đ</span></li>
                             <li>Thanh toán <span id="pay-all">{{sumText}}</span></li>
                         </ul>
-                        <form action="/user/thanh-toan" method="post">
+                        <form id="form-thanh-toan" action="/user/thanh-toan" method="post" onsubmit="PostThanhToan(event)">
                             <button id="thanh-toan-btn" type="submit" name="code" value="" class="primary-btn">Thanh toán</button>
                         </form>
                     </div>
@@ -107,7 +107,8 @@
     </section>
 
     <script>
-        
+  var post = false;
+      
 function changeQuantity(id) {
     var quantity = document.getElementById(id).value;
     if (quantity == 0) return removeCart(id);
@@ -176,6 +177,8 @@ function updateCart2() {
     $.ajax(settings).done(function (response) {
         if (typeof response != 'object') response = JSON.parse(response);
         if (response.code != 401) {
+            if (response.canCheckOut) 
+            post= true;
             var discount = parseInt(
                 document.getElementById('discount-value').getAttribute('data-value')
             );
@@ -269,6 +272,29 @@ function apDung() {
         }
     });
 }
+function PostThanhToan(event){
+    if(!post)
+        event.preventDefault()
+    else return
+    var settings = {
+        url: '/api/cart-info',
+        method: 'POST',
+        timeout: 0,
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        data: JSON.stringify({}),
+    };
 
-
+    $.ajax(settings).done(function (response) {
+        console.log(response)
+        if (!response.canCheckOut) {
+            Swal.fire("Vui lòng kiểm tra lại giỏ hàng");
+        }
+        else{
+            post= true;
+            document.getElementById("form-thanh-toan").onsubmit();
+        }
+    });
+}
     </script>

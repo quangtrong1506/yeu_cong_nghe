@@ -244,6 +244,7 @@ class HomeController {
             message: 'Bạn đã thay đổi thông tin thành công',
         });
     }
+    // get
     async viewCart(req, res, next) {
         var categories = await Categories.find({});
         if (!req.session.login)
@@ -259,6 +260,24 @@ class HomeController {
         var count = 0;
         for (let i = 0; i < cartDB.length; i++) {
             var prod = await Product.findOne({ id: cartDB[i].productId });
+            if (!prod) {
+                cartDB[i].price = 0;
+                cartDB[i].name = 'Sản phẩm không còn tồn tại';
+                cartDB[i].slug = '#';
+                cartDB[i].total = 0;
+                cartDB[i].image = '404.png';
+                count += 1;
+                continue;
+            }
+            if (prod.status == 'Ngừng kinh doanh') {
+                cartDB[i].price = 0;
+                cartDB[i].name = 'Cửa hàng đã ngừng kinh doanh sản phẩm này';
+                cartDB[i].slug = '#';
+                cartDB[i].total = 0;
+                cartDB[i].image = '404.png';
+                count += 1;
+                continue;
+            }
             sum += (prod.price - prod.priceSale) * cartDB[i].quantity;
             cartDB[i].price = new Intl.NumberFormat('vi-VN', {
                 style: 'currency',
@@ -394,6 +413,7 @@ class HomeController {
         var products = [];
         for (let i = 0; i < cartDB.length; i++) {
             var prod = await Product.findOne({ id: cartDB[i].productId });
+            if (!prod) continue;
             await Product.findOneAndUpdate(
                 { id: cartDB[i].productId },
                 {

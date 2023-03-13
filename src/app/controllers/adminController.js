@@ -69,22 +69,21 @@ class adminController {
             element.sale = element.priceSale > 0 ? true : false;
             element.img = element.images[0];
             element.statusCheck = {};
-            if (element.status.toLowerCase() == 'Còn hàng'.toLowerCase())
+            if (element.status == 'Ngừng kinh doanh') element.statusCheck = {};
+            else if (element.status.toLowerCase() == 'Còn hàng'.toLowerCase())
                 element.statusCheck.a = true;
             else if (element.status.toLowerCase() == 'Sắp hết hàng'.toLowerCase())
                 element.statusCheck.b = true;
             else if (element.status.toLowerCase() == 'Hết hàng'.toLowerCase())
                 element.statusCheck.c = true;
-            if (element.quantity < 10 && element.quantity > 0) {
+            else if (element.quantity < 10 && element.quantity > 0) {
                 element.statusCheck.a = false;
                 element.statusCheck.b = true;
                 element.status = 'Sắp hết hàng';
-            }
-            if (element.quantity == 0) {
-                element.statusCheck.a = false;
-                element.statusCheck.b = false;
-                element.statusCheck.c = false;
-                element.statusCheck.d = true;
+            } else if (element.quantity == 0) {
+                element.statusCheck = {
+                    d: true,
+                };
                 element.status = 'Hết hàng';
             }
 

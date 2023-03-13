@@ -464,8 +464,19 @@ class apiController {
         cartDB = mongooseToObject(cartDB);
         var sum = 0,
             count = 0;
+        var canCheckOut = true;
         for (let i = 0; i < cartDB.length; i++) {
             var prod = await Product.findOne({ id: cartDB[i].productId });
+            if (!prod) {
+                canCheckOut = false;
+                count += 1;
+                continue;
+            }
+            if (prod.status == 'Ngừng kinh doanh') {
+                canCheckOut = false;
+                count += 1;
+                continue;
+            }
             sum += (prod.price - prod.priceSale) * cartDB[i].quantity;
             count += cartDB[i].quantity;
         }
@@ -473,7 +484,7 @@ class apiController {
             style: 'currency',
             currency: 'VND',
         }).format(sum);
-        res.json({ count: count, cart: cartDB, sum: sum, sumText: sumText });
+        res.json({ count: count, cart: cartDB, sum: sum, sumText: sumText, canCheckOut });
     }
     async updateCart(req, res, next) {
         var productId = req.body.productId,
@@ -523,8 +534,8 @@ class apiController {
                 message: 'Vui lòng đăng nhập để xóa sản phẩm trong giỏ hàng',
             });
         if (!productId) return res.json({ code: 401, message: 'ID sản phẩm trống' });
-        var product = await Product.findOne({ id: productId });
-        if (!product) return res.json({ code: 401, message: 'Không tìm thấy sản phẩm' });
+        // var product = await Product.findOne({ id: productId });
+        // if (!product) return res.json({ code: 401, message: 'Không tìm thấy sản phẩm' });
         var cartDB = await Cart.findOne({ productId: productId, userId: req.session.userInfo.id });
         if (!cartDB)
             return res.json({

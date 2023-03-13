@@ -24,8 +24,8 @@
                             <tr>
                                 <th width='10'>STT</th>
                                 <th>ID đơn hàng</th>
-                                <th >Khách hàng</th>
-                                <th>Đơn hàng</th>
+                                <th>Khách hàng</th>
+                                <th style="max-width: 400px;">Sản phẩm</th>
                                 <th>Tổng tiền</th>
                                 <th>Tình trạng</th>
                                 <th>Tính năng</th>
@@ -37,7 +37,7 @@
                                 <td width='10'>{{inc @index}}</td>
                                 <td>#{{this.id}}</td>
                                 <td>{{this.userName}}</td>
-                                <td style="position: relative;">
+                                <td style="position: relative; max-width: 400px;">
                                     {{#each this.products}}
                                    <span class="order-product">
                                         <span class="order-product-name" >

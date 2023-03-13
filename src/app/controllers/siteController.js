@@ -11,7 +11,7 @@ const { getTimeUTC7, removeToneVietNamese } = require('../../ult/string');
 
 class HomeController {
     async index(req, res, next) {
-        var prodNB = await Product.find({}).limit(24);
+        var prodNB = await Product.find({}).sort({ updatedAt: -1, sold: -1 }).limit(12);
         var prodNew = await Product.find({}).sort({ updatedAt: -1 }).limit(6);
         var categoriesLimit = await Categories.find({}).limit(5);
         var categories = await Categories.find({});
@@ -25,7 +25,7 @@ class HomeController {
         for (let i = 0; i < categories.length; i++) {
             for (let j = 0; j < prod.length; j++) {
                 if (prod[j].categories == categories[i].name)
-                    categories[i].image = prod[i].images[0];
+                    categories[i].image = prod[j].images[0];
             }
         }
 
@@ -80,60 +80,67 @@ class HomeController {
             }
         }
         var date = new Date();
-        var arrayTemp = [];
+        var TatCaSanPhamBanDuocGanDayNhat = [];
         var countMount = date.getMonth() == 0 ? 12 : date.getMonth();
         var countYear = date.getMonth() == 0 ? date.getFullYear() - 1 : date.getFullYear();
         if (countMount < 10) countMount = '0' + countMount;
         var dateDK = new Date(countYear + '-' + countMount + '-' + date.getDate());
         for (let i = 0; i < productOrders.length; i++) {
             const element = productOrders[i];
+            var p = await Product.findOne({ id: element.product.id });
+            if (!p) continue;
             var time = new Date(element.time);
             if (i == 0) {
-                arrayTemp.push({
+                TatCaSanPhamBanDuocGanDayNhat.push({
                     id: productOrders[0].product.id,
                     count: productOrders[0].product.quantity,
                 });
                 continue;
             }
             if (time > dateDK) {
-                for (let j = 0; j < arrayTemp.length; j++) {
-                    if (arrayTemp[j].id == productOrders[i].product.id) {
-                        arrayTemp[j].count += productOrders[i].product.quantity;
+                for (let j = 0; j < TatCaSanPhamBanDuocGanDayNhat.length; j++) {
+                    if (TatCaSanPhamBanDuocGanDayNhat[j].id == productOrders[i].product.id) {
+                        TatCaSanPhamBanDuocGanDayNhat[j].count += productOrders[i].product.quantity;
                         break;
                     }
-                    if (j == arrayTemp.length - 1)
-                        arrayTemp.push({
+                    if (j == TatCaSanPhamBanDuocGanDayNhat.length - 1)
+                        TatCaSanPhamBanDuocGanDayNhat.push({
                             id: productOrders[i].product.id,
                             count: productOrders[i].product.quantity,
                         });
                 }
             }
         }
-        var prodBCTmp = [];
-        var tmp2 = [];
-        arrayTemp.sort(function (a, b) {
+        var SanPhamBanChay6 = [];
+        TatCaSanPhamBanDuocGanDayNhat.sort(function (a, b) {
             if (a.count < b.count) return 1;
             if (a.count > b.count) return -1;
             return 0;
         });
-        var dk = arrayTemp.length > 6 ? 6 : arrayTemp.length;
-        for (let i = 0; i < prod.length; i++) {
-            for (let j = 0; j < dk; j++) {
-                if (arrayTemp[j].id == prod[i].id) {
-                    if (prod[i].priceSale > 0) prod[i].price = prod[i].price - prod[i].priceSale;
-                    prod[i].price = prod[i].price.toLocaleString('vi-VN', {
+        var dk =
+            TatCaSanPhamBanDuocGanDayNhat.length > 6 ? 6 : TatCaSanPhamBanDuocGanDayNhat.length;
+        for (let i = 0; i < dk; i++) {
+            for (let j = 0; j < prod.length; j++) {
+                if (TatCaSanPhamBanDuocGanDayNhat[i].id == prod[j].id) {
+                    if (prod[j].priceSale > 0) prod[j].price = prod[j].price - prod[j].priceSale;
+                    prod[j].price = prod[j].price.toLocaleString('vi-VN', {
                         style: 'currency',
                         currency: 'VND',
                     });
-                    prod[i].categories = removeToneVietNamese(
-                        prod[i].categories.trim().replace(/ /g, '-')
+                    prod[j].categories = removeToneVietNamese(
+                        prod[j].categories.trim().replace(/ /g, '-')
                     );
-                    tmp2.push(prod[i]);
-                    if (j % 3 == 0) {
-                        prodBCTmp.push(tmp2);
-                        tmp2 = [];
-                    }
+                    SanPhamBanChay6.push(prod[j]);
                 }
+            }
+        }
+        var prodBC = [];
+        var tmp3 = [];
+        for (let i = 1; i < 7; i++) {
+            tmp3.push(SanPhamBanChay6[i - 1]);
+            if (i % 3 == 0) {
+                prodBC.push(tmp3);
+                tmp3 = [];
             }
         }
         for (let i = 0; i < news.length; i++) {
@@ -145,7 +152,7 @@ class HomeController {
             title: 'Trang chủ',
             prodNB: prodNB,
             prodNew: prodNewTmp,
-            prodBC: prodBCTmp,
+            prodBC: prodBC,
             categories: categories,
             categoriesLimit: mongooseToObject(categoriesLimit),
             session: req.session,
@@ -164,17 +171,17 @@ class HomeController {
         var productDB = null;
         var options = {};
         var skip = page == 1 ? 0 : (page - 1) * limit;
-        // sort 0 = mặc định , 1 A-Z,2 Z-A, 3 giá tăng dần, 4 giảm dần
+        // sort 0 = mặc định ,1= A-Z,2 Z-A, 3 giá tăng dần, 4 giảm dần
         var sortProduct = {};
         var sortText = 'Mặc định';
         if (sort == 1) {
             sortProduct = {
-                name: -1,
+                name: 1,
             };
             sortText = 'Theo tên A-Z';
         } else if (sort == 2) {
             sortProduct = {
-                name: 1,
+                name: -1,
             };
             sortText = 'Theo tên Z-A';
         } else if (sort == 3) {
@@ -197,7 +204,11 @@ class HomeController {
         if (page < 1) page = 1;
         if (page > numberOfPage) skip = (numberOfPage - 1) * limit;
         if (skip < 0) skip = 0;
-        productDB = await Product.find(options).limit(limit).sort(sortProduct).skip(skip);
+        productDB = await Product.find(options)
+            .limit(limit)
+            .sort(sortProduct)
+            .skip(skip)
+            .collation({ locale: 'vi', caseLevel: true });
         productDB = mongooseToObject(productDB);
         for (let i = 0; i < productDB.length; i++) {
             if (productDB[i].priceSale > 0) {
@@ -245,14 +256,14 @@ class HomeController {
                         link: link,
                     });
                 } else if (page >= numberOfPage) {
-                    var urlPage = '&page=' + (count2 - 2 + i);
+                    var urlPage = '&page=' + (count2 - 1 + i);
                     var link = urlSearch + urlCategories + urlSort + urlPage;
                     link = '?' + link.substring(1, link.length);
                     var active = false;
                     if (i == n - 1) active = true;
                     if (i == n - 2) pageNumber.linkBefore = link;
                     pageNumber.list.push({
-                        number: count2 - 2 + i,
+                        number: count2 - 1 + i,
                         active: active,
                         link: link,
                     });
