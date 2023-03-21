@@ -17,7 +17,7 @@ module.exports = {
     },
     getID: function (length) {
         length = length || 12;
-        length = length < 8 ? 8 : length > 30 ? 30 : length;
+        length = length < 6 ? 6 : length > 30 ? 30 : length;
         var char = 'abcdefghijklmnopqrstuvwxyz0123456789ASDFGHJKLQWERTYUIOPZXCVBNM';
         var id = '';
         while (id.length < length) {
