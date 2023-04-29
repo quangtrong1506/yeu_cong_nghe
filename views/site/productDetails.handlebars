@@ -50,8 +50,9 @@
             </div>
           </div>
           <a href="javascript:" class="primary-btn" onclick="addToCartBtnClick('{{product.id}}')">Thêm vào giỏ</a>
+          <a href="javascript:" class="primary-btn" onclick="buyNow('{{product.id}}')">Mua ngay</a>
           <ul>
-            <li><b>Số lượng</b> <span>{{product.quantity}}</span></li>
+            <li><b>Số lượng</b> <span class="count-so-luong-co">{{product.quantity}}</span></li>
             <li>
               <b>Đã bán</b>
               <span>{{product.sold}}</span>
@@ -71,18 +72,43 @@
           <ul class="nav nav-tabs" role="tablist">
             <li class="nav-item">
               <a
-                class="nav-link"
+                class="nav-link active"
                 data-toggle="tab"
                 href="#tabs-1"
                 role="tab"
                 aria-selected="false"
               >Thông tin sản phẩm</a>
             </li>
+            <li class="nav-item">
+              <a
+                class="nav-link"
+                data-toggle="tab"
+                href="#tabs-2"
+                role="tab"
+                aria-selected="false"
+              >Đánh giá</a>
+            </li>
           </ul>
           <div class="tab-content">
             <div class="tab-pane active" id="tabs-1" role="tabpanel">
               <div class="product__details__tab__desc">
                 <p>{{{product.description}}}</p>
+              </div>
+            </div>
+            <div class="tab-pane" id="tabs-2" role="tabpanel" style="margin-bottom: 50px;">
+              <div class="product__details__tab__desc">
+                <div class="row">
+                  <div class="col">
+                    <h4>Đánh giá của khách hàng</h4>
+                  </div>
+                  <div class="col" style="text-align: right;">
+                    <input type="button" value="Đánh giá sản phẩm" onclick="ThemDanhGiaMoi()">
+                  </div>
+
+                </div>
+                <div class="row">
+                  <div class="col" style="text-align: center; margin-top: 150px;">Chưa có đánh giá nào</div>
+                </div>
               </div>
             </div>
           </div>
@@ -145,3 +171,20 @@
     </div>
   </div>
 </section>
+<form id="form-thanh-toan" action="/user/thanh-toan" method="post">
+    <input id="upload-prod" style="display: none;" type="text" name="products" value="">
+    <input id="code-giam-gia" style="display: none;" type="text" name="code" value="">
+</form>
+<script>
+  function PostThanhToan2(id,quantity){
+    let products = [
+      {
+        productId:id,
+        quantity:quantity
+      }
+    ];
+    document.getElementById("upload-prod").value = JSON.stringify(products)
+    document.getElementById("form-thanh-toan").submit()
+}
+   
+</script>

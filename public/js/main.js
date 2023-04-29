@@ -1,5 +1,3 @@
-'use strict';
-
 (function ($) {
     $(window).on('load', function () {
         $('.loader').fadeOut();
@@ -246,7 +244,13 @@
         var $button = $(this);
         var oldValue = $button.parent().find('input').val();
         if ($button.hasClass('inc')) {
+            let countslco = document.querySelector('.count-so-luong-co').innerHTML;
+            countslco = parseInt(countslco);
             var newVal = parseFloat(oldValue) + 1;
+            if (newVal > countslco) {
+                showAlert('Bạn đã thêm tối đa sản phẩm mà shop có', '', 'info');
+                newVal = countslco;
+            }
         } else {
             // Don't allow decrementing below zero
             if (oldValue > 0) {
@@ -268,8 +272,176 @@
                 $(this).addClass('active');
             }
         });
-})(jQuery);
 
+    $('.prod-select').each((index, element) => {
+        element.addEventListener('click', () => changeCheckProduct());
+    });
+    if (document.querySelector('#prod-check-all'))
+        document.querySelector('#prod-check-all').addEventListener('click', () => {
+            let list = $('.prod-select');
+            if (document.querySelector('#prod-check-all').checked)
+                for (let index = 0; index < list.length; index++) {
+                    list[index].checked = true;
+                }
+            else
+                for (let index = 0; index < list.length; index++) {
+                    list[index].checked = false;
+                }
+            changeCheckProduct();
+        });
+
+    if (document.getElementById('select-tinh-thanh-pho')) {
+        let settings = {
+            url: 'https://vn-public-apis.fpo.vn/provinces/getAll?limit=-1',
+            method: 'GET',
+            timeout: 0,
+        };
+        $.ajax(settings).done(function (response) {
+            let select = document.getElementById('select-tinh-thanh-pho');
+            select.innerHTML =
+                '<option data-display="Lựa chọn Tỉnh/Thành phố" value="-1">Chưa lựa chọn</option>';
+            var tp = response.data.data;
+            for (let i = 0; i < tp.length; i++) {
+                const element = tp[i];
+                var op = document.createElement('option');
+                op.value = element.code;
+                op.innerHTML = element.name;
+                select.appendChild(op);
+            }
+            $('.select-tinh-thanh-pho').niceSelect('destroy').niceSelect();
+        });
+        $(document).on('change', '.select-tinh-thanh-pho', function () {
+            let code = document.getElementById('select-tinh-thanh-pho').value;
+            let settings = {
+                url: 'https://vn-public-apis.fpo.vn/districts/getByProvince?provinceCode=' + code,
+                method: 'GET',
+                timeout: 0,
+            };
+            $.ajax(settings).done(function (response) {
+                let select = document.getElementById('select-quan-huyen');
+                select.innerHTML =
+                    '<option data-display="Lựa chọn Quận/Huyện" value="-1">Chưa lựa chọn</option>';
+                var tp = response.data.data;
+                for (let i = 0; i < tp.length; i++) {
+                    const element = tp[i];
+                    var op = document.createElement('option');
+                    op.value = element.code;
+                    op.innerHTML = element.name;
+                    select.appendChild(op);
+                }
+                $('.select-quan-huyen').niceSelect('destroy').niceSelect();
+                document.getElementById('select-xa-phuong').innerHTML =
+                    '<option data-display="Lựa chọn Xã/Phường" value="-1">Chưa lựa chọn</option>';
+                $('.select-xa-phuong').niceSelect('destroy').niceSelect();
+            });
+            let ship = code == '01' ? 30000 : 45000;
+            document.querySelector('.tien-ship').innerHTML = new Intl.NumberFormat('vi-VN', {
+                style: 'currency',
+                currency: 'VND',
+            }).format(ship);
+            //17.320.000 ₫
+            let all = document.querySelector('#tong-tien-hang').innerHTML.replace(/[^0-9]/g, '');
+            let tiengiamgia = document.querySelector('#discount').innerHTML.replace(/[^0-9]/g, '');
+            all = parseInt(all);
+            tiengiamgia = parseInt(tiengiamgia);
+            document.querySelector('#tien-thanh-toan').innerHTML = new Intl.NumberFormat('vi-VN', {
+                style: 'currency',
+                currency: 'VND',
+            }).format(all - tiengiamgia + ship);
+        });
+        $(document).on('change', '.select-quan-huyen', function () {
+            let code = document.getElementById('select-quan-huyen').value;
+            let settings = {
+                url: 'https://vn-public-apis.fpo.vn/wards/getByDistrict?districtCode=' + code,
+                method: 'GET',
+                timeout: 0,
+            };
+            $.ajax(settings).done(function (response) {
+                console.log(response);
+                let select = document.getElementById('select-xa-phuong');
+                select.innerHTML =
+                    '<option data-display="Lựa chọn Xã/Phường" value="-1">Chưa lựa chọn</option>';
+                var tp = response.data.data;
+                for (let i = 0; i < tp.length; i++) {
+                    const element = tp[i];
+                    var op = document.createElement('option');
+                    op.value = element.code;
+                    op.innerHTML = element.name;
+                    select.appendChild(op);
+                }
+                $('.select-xa-phuong').niceSelect('destroy').niceSelect();
+            });
+        });
+    }
+})(jQuery);
+function changeCheckProduct() {
+    let flag = true;
+    let list = $('.prod-select');
+    for (let index = 0; index < list.length; index++) {
+        const element = list[index];
+        if (!element.checked) {
+            flag = false;
+            break;
+        }
+    }
+    flag
+        ? (document.getElementById('prod-check-all').checked = true)
+        : (document.getElementById('prod-check-all').checked = false);
+
+    let products = [];
+    for (let index = 0; index < list.length; index++) {
+        const element = list[index];
+        if (element.checked) {
+            let quantity = document.getElementById(element.getAttribute('data-productid')).value;
+            products.push({
+                productId: element.getAttribute('data-productid'),
+                quantity: quantity,
+            });
+        }
+    }
+    var settings = {
+        url: '/user/check-total-before-checkout',
+        method: 'POST',
+        timeout: 0,
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        data: JSON.stringify({
+            products: products,
+        }),
+    };
+
+    $.ajax(settings).done(function (response) {
+        if (response.code > 400) {
+            Swal.fire(response.message);
+        } else {
+            var discount = parseInt(
+                document.getElementById('discount-value').getAttribute('data-value')
+            );
+            if (discount > 0) {
+                document
+                    .getElementById('discount-value')
+                    .setAttribute(
+                        'data-code',
+                        document.getElementById('discount-input').value.toUpperCase()
+                    );
+                document
+                    .getElementById('thanh-toan-btn')
+                    .setAttribute(
+                        'value',
+                        document.getElementById('discount-input').value.toUpperCase()
+                    );
+            }
+            var pay = response.totalNumber - discount < 0 ? 0 : response.totalNumber - discount;
+            var payAll = new Intl.NumberFormat('vi-VN', {
+                style: 'currency',
+                currency: 'VND',
+            }).format(pay);
+            document.getElementById('total-all').innerHTML = response.totalText;
+            document.getElementById('pay-all').innerHTML = payAll;
+        }
+    });
+}
 /*-------------------
 		Tùy ý đi
 	--------------------- */
@@ -591,6 +763,10 @@ function addToCartBtnClick(productId) {
     var quantity = parseInt(document.getElementById('quantity-input').value);
     addToCart(productId, quantity);
 }
+function buyNow(productId) {
+    var quantity = parseInt(document.getElementById('quantity-input').value);
+    PostThanhToan2(productId, quantity);
+}
 
 function updateCart() {
     var settings = {
@@ -621,13 +797,15 @@ function huyDH(id) {
     };
 
     Swal.fire({
-        title: 'Thông báo',
+        title: 'Bạn xác nhận hủy đơn hàng này',
         icon: 'question',
-        text: 'Bạn xác nhận hủy đơn hàng này',
+        html: `<p>Lý do hủy đơn hàng</p>
+        <input style="width:70%" type="text" placeholder="Tôi không muốn mua hàng nữa">
+        `,
         focusConfirm: true,
         showCancelButton: true,
-        confirmButtonText: 'Xác nhận',
-        cancelButtonText: 'Hủy',
+        confirmButtonText: 'Xác nhận hủy',
+        cancelButtonText: 'Không hủy',
     }).then((result) => {
         if (result.isConfirmed) {
             $.ajax(settings).done(function (response) {
@@ -646,6 +824,67 @@ function huyDH(id) {
                     }
                 });
             });
+        }
+    });
+}
+let tmp = '';
+function ThemDanhGiaMoi() {
+    Swal.fire({
+        title: 'Thêm đánh giá mới',
+        html: `
+        <h5>Đánh giá của bạn</h5>
+        <br>
+        <textarea name="" id="report-text" style="width: 80%; height: 100px;" >${tmp}</textarea>
+        <section id="rate" class="rating">
+        <input type="radio" id="star_5" name="rate" value="5" />
+        <label for="star_5" title="Five">&#9733;</label>
+        <input type="radio" id="star_4" name="rate" value="4" />
+        <label for="star_4" title="Four">&#9733;</label>
+        <input type="radio" id="star_3" name="rate" value="3" />
+        <label for="star_3" title="Three">&#9733;</label>
+        <input type="radio" id="star_2" name="rate" value="2" />
+        <label for="star_2" title="Two">&#9733;</label>
+        <input type="radio" id="star_1" name="rate" value="1" />
+        <label for="star_1" title="One">&#9733;</label>
+        </section>
+        `,
+        focusConfirm: true,
+        showCancelButton: true,
+        confirmButtonText: 'Đánh giá',
+        cancelButtonText: 'Hủy',
+    }).then((result) => {
+        if (result.isConfirmed) {
+            let text = document.getElementById('report-text').value;
+            let star = document.getElementById('star_5').checked
+                ? 5
+                : document.getElementById('star_4').checked
+                ? 4
+                : document.getElementById('star_3').checked
+                ? 3
+                : document.getElementById('star_2').checked
+                ? 2
+                : document.getElementById('star_1').checked
+                ? 1
+                : -1;
+            tmp = text;
+            if (!text) {
+                showAlert('Vui lòng nhập bình luận', '', 'info', ThemDanhGiaMoi);
+            } else if (star == -1) {
+                showAlert('Lựa chọn số sao đánh giá của bạn', '', 'info', ThemDanhGiaMoi);
+            } else showAlert('Bạn đã gửi đánh giá thành công', '', 'confirm');
+        }
+    });
+}
+function showAlert(title, html, icon, callback) {
+    Swal.fire({
+        title: title,
+        html: html,
+        icon: icon,
+        focusConfirm: true,
+        confirmButtonText: 'OK',
+    }).then((result) => {
+        if (result.isConfirmed) {
+            if (callback) callback();
         }
     });
 }

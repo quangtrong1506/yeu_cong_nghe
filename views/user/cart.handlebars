@@ -8,6 +8,12 @@
                         <table>
                             <thead>
                                 <tr>
+                                    <th>
+                                        <label class="container prod-check-all">
+                                        <input id="prod-check-all" type="checkbox" >
+                                        <span class="checkmark"></span>
+                                        </label>
+                                    </th>
                                     <th class="shoping__product">Sản phẩm</th>
                                     <th class="shoping__price">Giá</th>
                                     <th class="shoping__quantity">Số lượng</th>
@@ -16,9 +22,14 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                
                                   {{#each cart}}
                                   <tr id="row-{{this.productId}}">
+                                    <td>
+                                        <label class="container">
+                                        <input class="prod-select" data-productid="{{this.productId}}" type="checkbox" >
+                                        <span class="checkmark"></span>
+                                        </label>
+                                    </td>
                                     <td class="shoping__cart__item">
                                         <img src="/images/product/{{this.image}}" alt="" width="120px">
                                         <h5 class="text-overflow">
@@ -71,12 +82,14 @@
                     <div class="shoping__checkout">
                         <h5>Thanh toán hóa đơn</h5>
                         <ul>
-                            <li>Tổng tiền <span id="total-all" data-value="{{sum}}">{{sumText}}</span></li>
+                            <li>Tổng tiền <span id="total-all" data-value="0">0</span></li>
                             <li>Giảm giá <span id="discount-value" data-code="" data-value="0">- 0đ</span></li>
-                            <li>Thanh toán <span id="pay-all">{{sumText}}</span></li>
+                            <li>Thanh toán <span id="pay-all">0</span></li>
                         </ul>
                         <form id="form-thanh-toan" action="/user/thanh-toan" method="post" onsubmit="PostThanhToan(event)">
-                            <button id="thanh-toan-btn" type="submit" name="code" value="" class="primary-btn">Thanh toán</button>
+                            <input id="upload-prod" style="display: none;" type="text" name="products" value="">
+                            <input id="code-giam-gia" style="display: none;" type="text" name="code" value="">
+                            <button id="thanh-toan-btn" type="submit" class="primary-btn">Thanh toán</button>
                         </form>
                     </div>
                 </div>
@@ -184,7 +197,7 @@ function updateCart2() {
             );
             if(discount>0){
                 document.getElementById('discount-value').setAttribute('data-code',document.getElementById('discount-input').value.toUpperCase())
-                document.getElementById('thanh-toan-btn').setAttribute('value',document.getElementById('discount-input').value .toUpperCase())
+                document.getElementById('code-giam-gia').setAttribute('value',document.getElementById('discount-input').value .toUpperCase())
             }
             var pay = response.sum - discount <0 ? 0:response.sum - discount;
             
@@ -209,9 +222,8 @@ function updateCart2() {
             }
             document.getElementById('cart-count').innerHTML = response.count;
             document.getElementById('cart-price').innerHTML = response.sumText;
-            document.getElementById('total-all').innerHTML = response.sumText;
-            document.getElementById('pay-all').innerHTML = payAll;
-            document.getElementById('discount-value').innerHTML ="-"+ discountPrice
+            document.getElementById('discount-value').innerHTML ="-"+ discountPrice;
+            changeCheckProduct()
         }
     });
 }
@@ -268,33 +280,28 @@ function apDung() {
             var price = response.price
             if(!price) price = 0;
             document.getElementById('discount-value').setAttribute('data-value', price);
-            updateCart2();
+            changeCheckProduct();
         }
     });
 }
 function PostThanhToan(event){
-    if(!post)
-        event.preventDefault()
-    else return
-    var settings = {
-        url: '/api/cart-info',
-        method: 'POST',
-        timeout: 0,
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        data: JSON.stringify({}),
-    };
-
-    $.ajax(settings).done(function (response) {
-        console.log(response)
-        if (!response.canCheckOut) {
-            Swal.fire("Vui lòng kiểm tra lại giỏ hàng");
+    event.preventDefault();
+    let code = document.getElementById("discount-value").getAttribute("data-code");
+    let products = [];
+    let list = $('.prod-select');
+    for (let index = 0; index < list.length; index++) {
+        const element = list[index];
+        if (element.checked) {
+            let quantity = document.getElementById(element.getAttribute('data-productid')).value;
+            products.push({
+                productId: element.getAttribute('data-productid'),
+                quantity: quantity,
+            });
         }
-        else{
-            post= true;
-            document.getElementById("form-thanh-toan").onsubmit();
-        }
-    });
+    }
+    if(products.length == 0)
+       return Swal.fire("Bạn chưa chọn sản phẩm nào");
+    document.getElementById("upload-prod").value = JSON.stringify(products)
+    document.getElementById("form-thanh-toan").submit()
 }
     </script>

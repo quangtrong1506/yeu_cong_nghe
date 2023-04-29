@@ -16,8 +16,8 @@ const Subscriber = require('../../models/subscriber');
 const { mongooseToObject, singleMongooseObject } = require('../../ult/mongoose');
 
 const nodemailer = require('nodemailer');
-const myEmail = 'sp.yeucongnghe@gmail.com';
-const myPasswork = 'hjgrkdpeplraiuoa';
+const myEmail = process.env.EMAIL;
+const myPasswork = process.env.EMAIL_PASSWORD;
 var transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {

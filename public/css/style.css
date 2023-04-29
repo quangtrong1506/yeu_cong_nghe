@@ -1796,8 +1796,11 @@ ol {
 .product-details {
     padding-top: 0px;
 }
-
+product__details__pic {
+}
 .product__details__pic__item {
+    width: 60%;
+    margin: 0 auto;
     margin-bottom: 20px;
 }
 
@@ -1966,6 +1969,9 @@ ol {
     border-bottom: none;
     justify-content: center;
     position: relative;
+}
+.product__details__tab .nav-link.active {
+    font-weight: bold !important;
 }
 
 .product__details__tab .nav-tabs:before {
@@ -2193,6 +2199,73 @@ rating stars
 
 .shoping__cart__table {
     margin-bottom: 30px;
+}
+/* The container */
+.shoping__cart__table .container {
+    display: block;
+    position: relative;
+    padding-left: 35px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    font-size: 22px;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+/* Hide the browser's default checkbox */
+.shoping__cart__table .container input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    height: 0;
+    width: 0;
+}
+
+/* Create a custom checkbox */
+.shoping__cart__table .checkmark {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 25px;
+    width: 25px;
+    background-color: #eee;
+}
+
+/* On mouse-over, add a grey background color */
+.shoping__cart__table .container:hover input ~ .checkmark {
+    background-color: #ccc;
+}
+
+/* When the checkbox is checked, add a blue background */
+.shoping__cart__table .container input:checked ~ .checkmark {
+    background-color: #2196f3;
+}
+
+/* Create the checkmark/indicator (hidden when not checked) */
+.shoping__cart__table .checkmark:after {
+    content: '';
+    position: absolute;
+    display: none;
+}
+
+/* Show the checkmark when checked */
+.shoping__cart__table .container input:checked ~ .checkmark:after {
+    display: block;
+}
+
+/* Style the checkmark/indicator */
+.shoping__cart__table .container .checkmark:after {
+    left: 9px;
+    top: 5px;
+    width: 5px;
+    height: 10px;
+    border: solid white;
+    border-width: 0 3px 3px 0;
+    -webkit-transform: rotate(45deg);
+    -ms-transform: rotate(45deg);
+    transform: rotate(45deg);
 }
 
 .shoping__cart__table table {
@@ -4227,4 +4300,79 @@ rating stars
 /* Handle on hover */
 ::-webkit-scrollbar-thumb:hover {
     background: var(--main);
+}
+.rating {
+    margin: 5px auto;
+    width: 220px;
+    height: 50px;
+    padding: 5px 10px;
+    background: #fff;
+    display: block;
+    overflow: hidden;
+    unicode-bidi: bidi-override;
+    direction: rtl;
+    display: flex;
+    justify-content: space-around;
+}
+.rating:not(:checked) > input {
+    display: none;
+}
+
+/* - - - - - RATE */
+#rate {
+    top: -65px;
+}
+#rate:not(:checked) > label {
+    cursor: pointer;
+    float: right;
+    width: 30px;
+    height: 30px;
+    display: block;
+    color: rgba(0, 135, 211, 0.4);
+    line-height: 33px;
+    text-align: center;
+    font-size: 44px;
+}
+#rate:not(:checked) > label:hover,
+#rate:not(:checked) > label:hover ~ label {
+    color: rgba(0, 135, 211, 0.6);
+}
+#rate > input:checked + label:hover,
+#rate > input:checked + label:hover ~ label,
+#rate > input:checked ~ label:hover,
+#rate > input:checked ~ label:hover ~ label,
+#rate > label:hover ~ input:checked ~ label {
+    color: rgba(0, 135, 211, 0.8);
+}
+#rate > input:checked ~ label {
+    color: rgb(0, 135, 211);
+}
+/* - - - - - LIKE */
+#like {
+    bottom: -65px;
+}
+#like:not(:checked) > label {
+    cursor: pointer;
+    float: right;
+    width: 30px;
+    height: 30px;
+    display: block;
+
+    color: rgba(233, 54, 40, 0.4);
+    line-height: 33px;
+    text-align: center;
+}
+#like:not(:checked) > label:hover,
+#like:not(:checked) > label:hover ~ label {
+    color: rgba(233, 54, 40, 0.6);
+}
+#like > input:checked + label:hover,
+#like > input:checked + label:hover ~ label,
+#like > input:checked ~ label:hover,
+#like > input:checked ~ label:hover ~ label,
+#like > label:hover ~ input:checked ~ label {
+    color: rgba(233, 54, 40, 0.8);
+}
+#like > input:checked ~ label {
+    color: rgb(233, 54, 40);
 }

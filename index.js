@@ -4,6 +4,7 @@ const Handlebars = require('handlebars');
 const fileUpload = require('express-fileupload');
 const session = require('express-session');
 const cors = require('cors');
+require('dotenv').config();
 
 const path = require('path');
 const app = express();
@@ -42,9 +43,8 @@ route(app);
 
 //sever
 
-var port = 3000;
-app.listen(port, () => {
-    console.log(`Đã chạy sever thành công (http://localhost:${port})`);
+app.listen(process.env.PORT || 3000, () => {
+    console.log(`Đã chạy sever thành công (http://localhost:${process.env.PORT || 3000})`);
 });
 
 // Helper function to handle

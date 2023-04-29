@@ -249,7 +249,7 @@
                                 Nhập Email để đăng ký nhận thông báo về những sản phẩm mới nhất
                             </p>
                             <form onsubmit="addSubscriber(event)">
-                                <input type='email' id="email" placeholder='Nhập email' />
+                                <input type='email' id="email-sb" placeholder='Nhập email' />
                                 <button type='submit' class='site-btn'>Đăng ký</button>
                             </form>
                             <div class='footer__widget__social'>
@@ -277,7 +277,7 @@
     <script>
     function addSubscriber(event){
         event.preventDefault();
-        var email = document.getElementById("email");
+        var email = document.getElementById("email-sb");
 
         var settings = {
                 "url": "/api/add-subscriber",
@@ -304,4 +304,6 @@
     }
 
 </script>
+<div class="elfsight-app-4b67b444-6b1f-4f21-8608-4093db146309"></div>
 </html>
+<script src="https://static.elfsight.com/platform/platform.js" data-use-service-core defer></script>

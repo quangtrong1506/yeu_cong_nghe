@@ -24,8 +24,36 @@
                                     </div>
                                 </div>
                             </div>
+                            <p>Địa chỉ nhận hàng</p>
+                            <div class="row">
+                                <div class="col-lg-4">
+                                    <div class="checkout__input">
+                                        <p>Tỉnh/Thành phố<span>*</span></p>
+                                        <select class="select-tinh-thanh-pho" name="tinhthanhpho" id="select-tinh-thanh-pho">
+                                            <option data-display="Lựa chọn tỉnh/Thành phố" value="-1">Chưa chọn</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-lg-4">
+                                    <div class="checkout__input">
+                                        <p>Quận/huyện<span>*</span></p>
+                                        <select class="select-quan-huyen" name="quanhuyen" id="select-quan-huyen">
+                                            <option value="-1">Chưa lựa chọn</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-lg-4">
+                                    <div class="checkout__input">
+                                        <p>Xã phường<span>*</span></p>
+                                        <select class="select-xa-phuong" name="xaphuong" id="select-xa-phuong">
+                                            <option value="-1">Chưa lựa chọn</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
                             <div class="checkout__input">
-                                <p>Địa chỉ<span>*</span></p>
+                                <br>
+                                <p>Địa chỉ chi tiết<span>*</span></p>
                                 <input type="text" id="address" name="address" placeholder="Số nhà, quận huyện, Tỉnh, Thành Phố" class="checkout__input__add" value="{{session.userInfo.address}}">
                             </div>
                             <div class="row">
@@ -57,10 +85,10 @@
                                         <li><label>{{this.name}}</label><span>{{this.total}}</span></li>
                                     {{/each}}
                                 </ul>
-                                <div class="checkout__order__subtotal">Tổng tiền hàng <span>{{total}}</span></div>
+                                <div class="checkout__order__subtotal">Tổng tiền hàng <span id="tong-tien-hang">{{total}}</span></div>
                                 <div class="checkout__order__coupons">Giảm giá<span id="discount" data-code="{{code}}">-{{discount}}</span></div>
-                                <div class="checkout__order__transport-fee">Phí vận chuyển <span>{{ship}}</span></div>
-                                <div class="checkout__order__total">Thanh toán <span>{{pay}}</span></div>
+                                <div class="checkout__order__transport-fee">Phí vận chuyển <span class="tien-ship">{{ship}}</span></div>
+                                <div class="checkout__order__total">Thanh toán <span id="tien-thanh-toan">{{pay}}</span></div>
                                 <div class="checkout__input__checkbox">
                                     {{!-- <label for="acc-or">
                                         In hóa đơn?
@@ -103,13 +131,27 @@
         {{/if}}
     </section>
     <script>
+        var products = [];
+       {{#each cart}}
+            products.push({
+                id:'{{this.id}}',
+                quantity:{{this.quantity}}
+            })
+        {{/each}}
+
         function datHang(){
             var name = document.getElementById("name").value;
             var phone = document.getElementById("phone").value;
             var email = document.getElementById("email").value;
             var address = document.getElementById("address").value;
             var note = document.getElementById("note").value;
+            var tinhthanhpho = document.querySelector(".nice-select.select-tinh-thanh-pho span.current").innerHTML;
+            var quanhuyen = document.querySelector(".nice-select.select-quan-huyen span.current ").innerText;
+            var xaphuong= document.querySelector(".nice-select.select-xa-phuong span.current").innerText;
             var code = document.getElementById("discount").getAttribute("data-code")||"";
+            tinhthanhpho = tinhthanhpho.match("Lựa chọn") ?"-1":tinhthanhpho
+            quanhuyen = quanhuyen.match("Lựa chọn") ?"-1":quanhuyen
+            xaphuong = xaphuong.match("Lựa chọn") ?"-1":xaphuong
             var settings = {
                 url: '/user/checkout',
                 method: 'POST',
@@ -124,6 +166,10 @@
                     email:email,
                     address:address,
                     note:note,
+                    tinhthanhpho:tinhthanhpho,
+                    quanhuyen:quanhuyen,
+                    xaphuong:xaphuong,
+                    cart:products
                 }),
             };
 
@@ -149,3 +195,9 @@
             });
         }
     </script>
+    <style>
+        .nice-select.open .list{
+            max-height: 300px;
+            overflow-y: scroll !important;
+        }
+    </style>

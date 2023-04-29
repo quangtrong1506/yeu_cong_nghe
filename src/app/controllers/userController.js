@@ -45,16 +45,31 @@ class HomeController {
             password = user.password || '',
             confirmPassword = user.confirm || '';
         var message = 'Đăng ký tài khoản thành công';
-        if (!username) message = 'Vui lòng nhập số điện thoại hoặc Email';
-        else if (!password) message = 'Vui lòng nhập mật khẩu';
-        else if (password != confirmPassword) message = 'Xác nhận mật khẩu không chính xác';
+        if (!username)
+            return res.json({
+                code: 401,
+                message: 'Vui lòng nhập số điện thoại hoặc Email',
+            });
+        else if (!password)
+            return res.json({
+                code: 401,
+                message: 'Vui lòng nhập mật khẩu',
+            });
+        else if (password != confirmPassword)
+            return res.json({
+                code: 401,
+                message: 'Xác nhận mật khẩu không chính xác',
+            });
         else if (username.match('@') && !username.match(/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/g)) {
             return res.json({
                 code: 401,
                 message: 'Địa chỉ email không hợp lệ',
             });
         } else if (!username.match('@') && username.match(/[^0-9]/g)) {
-            message = 'Số điện thoại không hợp lệ';
+            return res.json({
+                code: 401,
+                message: 'Địa chỉ email không hợp lệ',
+            });
         } else {
             var user = await User.findOne({ phone: username });
             if (user)
@@ -77,6 +92,7 @@ class HomeController {
             newUser.save();
         }
         res.json({
+            code: 200,
             message: message,
         });
     }
@@ -311,7 +327,9 @@ class HomeController {
     async viewThanhToan(req, res, next) {
         var categories = await Categories.find({});
         var code = req.body.code;
+        var products = req.body.products;
         var ship = req.body.ship || 30000;
+        products = JSON.parse(products);
         if (!req.session.login)
             return res.render('user/checkout', {
                 title: 'Thanh toán',
@@ -319,29 +337,34 @@ class HomeController {
                 session: req.session,
                 categories: mongooseToObject(categories),
             });
+
         var discount = await Voucher.findOne({ code: code });
         discount = discount
             ? singleMongooseObject(discount)
             : {
                   price: 0,
               };
-        var cartDB = await Cart.find({ userId: req.session.userInfo.id });
-        cartDB = mongooseToObject(cartDB);
         var sum = 0;
         var count = 0;
-        for (let i = 0; i < cartDB.length; i++) {
-            var prod = await Product.findOne({ id: cartDB[i].productId });
-            sum += (prod.price - prod.priceSale) * cartDB[i].quantity;
-            cartDB[i].price = new Intl.NumberFormat('vi-VN', {
-                style: 'currency',
-                currency: 'VND',
-            }).format(prod.price - prod.priceSale);
-            cartDB[i].total = new Intl.NumberFormat('vi-VN', {
-                style: 'currency',
-                currency: 'VND',
-            }).format((prod.price - prod.priceSale) * cartDB[i].quantity);
-            cartDB[i].name = prod.name;
-            count += cartDB[i].quantity;
+        var cart = [];
+        for (let i = 0; i < products.length; i++) {
+            var prod = await Product.findOne({ id: products[i].productId });
+            sum += (prod.price - prod.priceSale) * products[i].quantity;
+            cart.push({
+                id: products[i].productId,
+                quantity: products[i].quantity,
+                price: new Intl.NumberFormat('vi-VN', {
+                    style: 'currency',
+                    currency: 'VND',
+                }).format(prod.price - prod.priceSale),
+                total: new Intl.NumberFormat('vi-VN', {
+                    style: 'currency',
+                    currency: 'VND',
+                }).format((prod.price - prod.priceSale) * products[i].quantity),
+                name: prod.name,
+            });
+
+            count += products[i].quantity;
         }
         var total = new Intl.NumberFormat('vi-VN', {
             style: 'currency',
@@ -367,7 +390,7 @@ class HomeController {
             session: req.session,
             categories: mongooseToObject(categories),
             total: total,
-            cart: cartDB,
+            cart: cart,
             count: count,
             ship: ship,
             pay: pay,
@@ -375,25 +398,51 @@ class HomeController {
             code: code,
         });
     }
+    async getMoneyBeforeThanhToan(req, res, next) {
+        var products = req.body.products;
+        products;
+        if (!req.session.login) return res.json({ code: 401, message: 'Vui lòng đăng nhập lại' });
+        var sum = 0;
+        console.log(products);
+        for (let i = 0; i < products.length; i++) {
+            var prod = await Product.findOne({ id: products[i].productId });
+            sum += (prod.price - prod.priceSale) * products[i].quantity;
+        }
+        var total = new Intl.NumberFormat('vi-VN', {
+            style: 'currency',
+            currency: 'VND',
+        }).format(sum);
+
+        res.json({
+            totalNumber: sum,
+            totalText: total,
+        });
+    }
+
     async checkout(req, res, next) {
         var code = req.body.code;
         var name = req.body.name,
             address = req.body.address,
             phone = req.body.phone,
             email = req.body.email,
+            xaphuong = req.body.xaphuong,
+            tinhthanhpho = req.body.tinhthanhpho,
+            quanhuyen = req.body.quanhuyen,
+            cart = req.body.cart,
             note = req.body.note;
         if (!req.session.login) return res.json({ code: 401, message: 'Vui lòng đăng nhập lại' });
-        if (!name) return res.json({ code: 401, message: 'Vui lòng nhập họ & tên của bạn' });
+        if (!tinhthanhpho || tinhthanhpho == -1)
+            return res.json({ code: 401, message: 'Chưa lựa chọn Tỉnh/Thành phố' });
+        if (!quanhuyen || quanhuyen == -1)
+            return res.json({ code: 401, message: 'Chưa lựa chọn Quận/Huyện' });
+        if (!xaphuong || quanhuyen == -1)
+            return res.json({ code: 401, message: 'Chưa lựa chọn Xã/Phường' });
         if (!address) return res.json({ code: 401, message: 'Vui lòng nhập địa chỉ nhận hàng' });
         if (!phone) return res.json({ code: 401, message: 'Vui lòng nhập số điện thoại của bạn' });
         if (!phone.match(/(84|0[3|5|7|8|9])+([0-9]{8})\b/im))
             return res.json({ code: 401, message: 'Số điện thoại không hợp lệ' });
         if (email.length > 0 && !email.match(/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/im))
             return res.json({ code: 401, message: 'Email không hợp lệ' });
-        var cartDB = await Cart.find({ userId: req.session.userInfo.id });
-        cartDB = mongooseToObject(cartDB);
-        if (cartDB.length == 0)
-            return res.json({ code: 401, message: 'Bạn đã thanh toán những sản phẩm này' });
         var discount = await Voucher.findOne({ code: code });
         if (discount) {
             var tmp = singleMongooseObject(discount);
@@ -411,27 +460,28 @@ class HomeController {
               };
         var sum = 0;
         var products = [];
-        for (let i = 0; i < cartDB.length; i++) {
-            var prod = await Product.findOne({ id: cartDB[i].productId });
+        for (let i = 0; i < cart.length; i++) {
+            var prod = await Product.findOne({ id: cart[i].id });
             if (!prod) continue;
             await Product.findOneAndUpdate(
-                { id: cartDB[i].productId },
+                { id: cart[i].productId },
                 {
-                    quantity: prod.quantity - cartDB[i].quantity,
-                    sold: prod.sold + cartDB[i].quantity,
+                    quantity: prod.quantity - cart[i].quantity,
+                    sold: prod.sold + cart[i].quantity,
                 }
             );
-            sum += (prod.price - prod.priceSale) * cartDB[i].quantity;
+            sum += (prod.price - prod.priceSale) * cart[i].quantity;
             products.push({
                 id: prod.id,
                 name: prod.name,
                 price: prod.price - prod.priceSale,
-                total: (prod.price - prod.priceSale) * cartDB[i].quantity,
-                quantity: cartDB[i].quantity,
+                total: (prod.price - prod.priceSale) * cart[i].quantity,
+                quantity: cart[i].quantity,
             });
         }
+        var tienship = 'tinhthanhpho'.toLocaleLowerCase().match('hà nội') ? 30000 : 45000;
         var total2 = sum - discount.price < 0 ? 0 : sum - discount.price;
-        total2 = total2 + 30000;
+        total2 = total2 + tienship;
         var sum = sum < 0 ? 0 : sum;
         sum = sum;
 
@@ -451,14 +501,21 @@ class HomeController {
             status: 'Chờ xác nhận',
         });
         newOrder.save();
+
         var cartAll = await Cart.find({});
         cartAll = mongooseToObject(cartAll);
         for (let i = 0; i < cartAll.length; i++) {
-            if (cartAll[i].userId == req.session.userInfo.id)
-                await Cart.findByIdAndRemove(cartAll[i]._id);
+            for (let j = 0; j < products.length; j++) {
+                if (
+                    cartAll[i].userId == req.session.userInfo.id &&
+                    cartAll[i].productId == products[j].id
+                )
+                    await Cart.findByIdAndRemove(cartAll[i]._id);
+            }
         }
         res.json({ message: 'Bạn đã đặt hàng thành công', cartId: id });
     }
+
     async viewOrder(req, res, next) {
         var categories = await Categories.find({});
         if (!req.session.login)

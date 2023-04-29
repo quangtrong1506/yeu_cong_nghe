@@ -223,6 +223,46 @@ class adminController {
             news: news,
         });
     }
+    async qlDoanhThuSite(req, res, next) {
+        var orders = await Order.find({});
+        orders = mongooseToObject(orders);
+        let labels = [];
+        let data = [];
+        let date = new Date();
+        let month = date.getMonth() + 1;
+        let count = month;
+        for (let i = 0; i < 12; i++) {
+            if (count == 0) {
+                count = 12;
+                labels.push('T.' + count + '/' + (date.getFullYear() - 1));
+            } else labels.push('T.' + count);
+            count--;
+        }
+        labels.reverse();
+
+        var index = 0;
+        for (let i = 0; i < orders.length; i++) {
+            const element = orders[i];
+            if (element.status.toLocaleLowerCase() != 'hoàn thành'.toLocaleLowerCase()) continue;
+            // let dateOfOrder = new Date(element.updatedAt);
+            let dateOfOrder = new Date(element.createdAt);
+            if (dateOfOrder.getFullYear() == date.getFullYear()) {
+                if (dateOfOrder.getMonth() == date.getMonth()) {
+                }
+            }
+        }
+        data = [
+            12220000, 55670000, 99229000, 106710000, 90789000, 112940000, 90320000, 107054000,
+            99766000, 89210000, 150670000, 123670000,
+        ];
+        res.render('admin/qlDoanhThu', {
+            layout: 'admin',
+            title: 'Quản lý doanh thu',
+            admin: req.session.adminInfo,
+            labels: labels,
+            data: data,
+        });
+    }
     async addNewsSite(req, res, next) {
         res.render('admin/addNews', {
             layout: 'admin',

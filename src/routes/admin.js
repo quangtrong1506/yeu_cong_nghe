@@ -16,6 +16,7 @@ router.use('/admin/quan-ly-don-hang', authenticate, adminController.oderManageme
 router.use('/admin/quan-ly-nha-cung-cap', authenticate, adminController.supplierManagementSite);
 router.use('/admin/quan-ly-danh-muc', authenticate, adminController.categoriesManagementSite);
 router.use('/admin/quan-ly-bai-viet', authenticate, adminController.newsManagementSite);
+router.use('/admin/quan-ly-doanh-thu', authenticate, adminController.qlDoanhThuSite);
 router.use('/admin/them-san-pham', authenticate, adminController.addProductSite);
 router.use('/admin/them-bai-viet', authenticate, adminController.addNewsSite);
 router.use('/admin/chinh-sua-san-pham', authenticate, adminController.editProductSite);
